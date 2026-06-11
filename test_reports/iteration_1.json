@@ -1,0 +1,57 @@
+{
+  "summary": "Tested Cockpit Prospection backend (10 pytest cases) + frontend (navigation, queue actions, settings persistence, AI improve). 9/10 backend pass. Frontend flows largely working: file-du-jour stats, queue with rendered messages, mark-sent removes prospect, settings persist into rendered messages, navigation across all 6 pages, prospect sheet with sequence preview/actions. ONE CRITICAL BUG: /api/ai/improve returns 502 because model name 'gpt-5.4' is invalid for Emergent LLM key.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/ai/improve",
+        "issue": "Returns 502 'Invalid model name passed in model=gpt-5.4'. The model 'gpt-5.4' does not exist on Emergent LLM key. server.py line 572 uses .with_model('openai', 'gpt-5.4'). Must use a valid model name such as 'gpt-5', 'gpt-4o', or similar. The Paramètres UI also displays 'GPT-5.4' in informational text.",
+        "priority": "CRITICAL"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "AI improve in prospect sheet",
+        "issue": "Clicking btn-ai-improve-message triggers backend 502 (invalid gpt-5.4 model). Textarea content unchanged. No visible error toast surfaced to user — only a 502 logged in browser console.",
+        "affected_selectors": ["btn-ai-improve-message", "textarea-message-draft"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "Prospect detail Sheet (and possibly other Dialog usages)",
+        "issues": [
+          "Accessibility console warnings: 'DialogContent requires a DialogTitle' and 'Missing Description or aria-describedby'. Should wrap title with VisuallyHidden or add aria-describedby."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "FIX server.py line 572: replace .with_model('openai', 'gpt-5.4') with a valid Emergent-supported model (e.g. 'gpt-5' or current GPT chat model). Update Parametres.jsx informational text if it references 'GPT-5.4'.",
+    "Surface AI errors via a toast in ProspectSheet so users see why the message did not change (currently silent failure).",
+    "Add DialogTitle/Description (or VisuallyHidden wrapper) to Sheet / Dialog components to remove a11y warnings."
+  ],
+  "critical_code_review_comments": [
+    "server.py is 634 lines — borderline; consider splitting routes (prospects, scrape, scenarios, ai, settings) into separate routers.",
+    "Hard-coded model 'gpt-5.4' is brittle — load from env (e.g., AI_MODEL) with a sensible default.",
+    "/api/ai/improve has no rate limiting and no input length cap on body.message — risk of token abuse.",
+    "Import endpoint does no max file size check beyond FastAPI default — could be DoS vector.",
+    "build_queue_item recomputes scenario for every queue item (1 mongo query each). For large queues this is N+1. Cache scenarios in-memory or fetch once."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py (new)"
+  ],
+  "success_rate": {"backend": "90% (9/10)", "frontend": "~95% (only AI improve flow broken due to backend model name)"},
+  "test_credentials": "N/A — app has no authentication.",
+  "seed_data_creation": "Backend tests create TEST_-prefixed CSV import prospects and clean them up. Scrape test ran 1 gouv electricien/Dijon job (5 limit) which may have added real prospects to DB.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Tested everything in /app/backend/tests/backend_test.py — re-run with: pytest /app/backend/tests/backend_test.py -v. After main agent fixes the AI model name, only need to re-test TestAI::test_ai_improve and the frontend btn-ai-improve-message flow. Other flows (dashboard stats, queue, mark-sent, settings persistence in messages, scenarios save, CSV import + dedupe, prospect actions envoye/repondu/reactiver, gouv scrape job completion) are confirmed working end-to-end.",
+  "rca of the issue": "POST /api/ai/improve invokes LlmChat(...).with_model('openai', 'gpt-5.4') in server.py:572. The litellm router rejects 'gpt-5.4' as a non-existent OpenAI model ('Invalid model name passed in model=gpt-5.4'). Mitigation: change to a valid model identifier (e.g. 'gpt-5' or 'gpt-4o-mini') and ideally read from env var AI_MODEL with a default."
+}
