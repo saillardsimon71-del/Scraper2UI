@@ -25,12 +25,15 @@ DEFAULT_OBJET = "Votre présence en ligne — {entreprise}"
 FOOTER = "\n\n—\nSi vous ne souhaitez plus recevoir mes messages, répondez simplement STOP."
 
 
-def send_email_sync(api_key: str, sender: str, sender_name: str, to: str, subject: str, body: str) -> int:
+def send_email_sync(api_key: str, sender: str, sender_name: str, to: str, subject: str, body: str,
+                    reply_to: str = "") -> int:
     from sendgrid import SendGridAPIClient
     from sendgrid.helpers.mail import Mail
     html = body.replace("\n", "<br>")
     from_email = (sender, sender_name) if sender_name else sender
     message = Mail(from_email=from_email, to_emails=to, subject=subject, html_content=html)
+    if reply_to:
+        message.reply_to = reply_to
     sg = SendGridAPIClient(api_key)
     resp = sg.send(message)
     return resp.status_code
@@ -73,7 +76,8 @@ async def eligible_prospects(db) -> list[tuple[dict, dict, list]]:
     out = []
     cursor = db.prospects.find(
         {"statut": "a_contacter", "date_prochaine_action": {"$lte": now_iso()},
-         "email": {"$exists": True, "$nin": ["", None]}},
+         "email": {"$exists": True, "$nin": ["", None]},
+         "email_invalide": {"$ne": True}},
         {"_id": 0},
     ).sort("score_conversion", -1)
     async for p in cursor:
@@ -115,6 +119,7 @@ async def run_tick(db, force: bool = False) -> dict:
 
     candidats = await eligible_prospects(db)
     prenom = as_str(settings.get("prenom_expediteur"))
+    reply_to = as_str(settings.get("email_reponse"))
     envoyes, erreurs = 0, 0
 
     for p, step, etapes in candidats[:restant]:
@@ -128,7 +133,7 @@ async def run_tick(db, force: bool = False) -> dict:
         }
         try:
             status = await asyncio.to_thread(
-                send_email_sync, key, sender, prenom, p["email"], objet, message + FOOTER)
+                send_email_sync, key, sender, prenom, p["email"], objet, message + FOOTER, reply_to)
             if status not in (200, 201, 202):
                 raise RuntimeError(f"SendGrid a répondu {status}")
             entry["statut"] = "envoye"

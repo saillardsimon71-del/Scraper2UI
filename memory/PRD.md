@@ -43,10 +43,20 @@ Porter le repo GitHub `saillardsimon71-del/Scraper2UI` (outil Python de prospect
 - Config : clé SendGrid + expéditeur simon@sitequivend.fr enregistrés, pilote ACTIVÉ, lien_rdv Calendly restauré
 - Test réel : email envoyé avec succès via SendGrid à simon@sitequivend.fr (statut 202), séquence avancée → épuisé, log OK
 
+## Implémenté — Itération 4 (11/06/2026) : Webhook SendGrid (porté du scraper de base), testé e2e
+- `backend/webhook.py` : routeur `/api/webhook/*` sécurisé par token secret (?token=…, généré au démarrage, dans settings.webhook_token)
+- **Inbound Parse** (`POST /api/webhook/sendgrid/inbound`) : réception des réponses email, classement auto par mots-clés (STOP/désabonner → opt_out ; oui/intéressé/rdv → repondu+interesse ; sinon repondu), mise à jour prospect + historique, stockage db.reponses, transfert de chaque réponse vers la boîte de l'expéditeur via SendGrid
+- **Event Webhook** (`POST /api/webhook/sendgrid/events`) : bounce/dropped → email_invalide=True (exclu de l'autopilot) ; spamreport/unsubscribe → opt_out ; stockage db.email_events
+- `GET /api/webhook/reponses` : liste des réponses reçues
+- **Reply-To** : setting email_reponse (ex simon@reponse.sitequivend.fr) appliqué aux envois autopilot + manuels
+- Frontend : carte "Webhook SendGrid" dans Paramètres (`WebhookCard.jsx`) — URLs à copier (avec token), champ adresse de réponse, instructions DNS (MX reponse.sitequivend.fr → mx.sendgrid.net), liste des réponses reçues
+- Tests e2e validés : 401 mauvais token, réponse intéressée → repondu, STOP → opt_out, bounce → email_invalide ; nettoyage fait
+- ⚠️ Action utilisateur requise : configurer chez SendGrid l'Inbound Parse + l'Event Webhook avec les URLs affichées dans Paramètres, et créer l'enregistrement DNS MX du sous-domaine de réponse
+
 ## Backlog priorisé
-- P2 : webhook SendGrid réception réponses (auto-marquage "répondu"/désabonné comme dans le scraper de base)
 - P2 : sync Google Sheets ; PDF audit ; rate limiting IA ; redaction clés API dans GET /settings
 - P2 : fallback non-drag&drop sur kanban (sélecteur de statut sur carte)
+- P2 : warnings a11y DialogTitle/Description ; découpage de server.py en modules ; debounce sur input quota autopilot
 
 ## Notes techniques
 - API gouv (recherche-entreprises.api.gouv.fr) : gratuite sans clé. OSM/Overpass : gratuit, parfois lent.

@@ -35,6 +35,7 @@ from autopilot import (
     autopilot_loop, count_sent_today, eligible_prospects, in_window,
     run_tick, send_email_sync,
 )
+from webhook import create_router as create_webhook_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -97,6 +98,7 @@ class SettingsUpdate(BaseModel):
     serper_api_key: Optional[str] = None
     sendgrid_api_key: Optional[str] = None
     email_expediteur: Optional[str] = None
+    email_reponse: Optional[str] = None
     autopilot_actif: Optional[bool] = None
     autopilot_quota_jour: Optional[int] = None
     autopilot_heure_debut: Optional[int] = None
@@ -725,7 +727,7 @@ async def email_send(body: EmailSendRequest):
     try:
         status = await asyncio.to_thread(
             send_email_sync, key, sender, as_str(settings.get("prenom_expediteur")),
-            to, body.subject, body.message)
+            to, body.subject, body.message, as_str(settings.get("email_reponse")))
     except Exception as e:
         raise HTTPException(502, f"Erreur SendGrid : {e}")
     if status not in (200, 201, 202):
@@ -790,6 +792,8 @@ async def read_settings():
             "serper_api_key": s.get("serper_api_key", ""),
             "sendgrid_api_key": s.get("sendgrid_api_key", ""),
             "email_expediteur": s.get("email_expediteur", ""),
+            "email_reponse": s.get("email_reponse", ""),
+            "webhook_token": s.get("webhook_token", ""),
             "autopilot_actif": bool(s.get("autopilot_actif", False)),
             "autopilot_quota_jour": int(s.get("autopilot_quota_jour", 50) or 50),
             "autopilot_heure_debut": int(s.get("autopilot_heure_debut", 9) or 0),
@@ -806,6 +810,7 @@ async def write_settings(body: SettingsUpdate):
 
 # ============================================================ App setup
 
+api_router.include_router(create_webhook_router(db))
 app.include_router(api_router)
 
 app.add_middleware(
@@ -826,6 +831,10 @@ async def seed():
     if not await db.settings.find_one({"_id": "global"}):
         await db.settings.insert_one({"_id": "global", "prenom_expediteur": "Simon",
                                       "lien_rdv": "", "serper_api_key": ""})
+    s = await db.settings.find_one({"_id": "global"})
+    if not s.get("webhook_token"):
+        await db.settings.update_one({"_id": "global"},
+                                     {"$set": {"webhook_token": uuid.uuid4().hex}})
     await db.prospects.create_index("id", unique=True)
     await db.prospects.create_index([("statut", 1), ("date_prochaine_action", 1)])
     await db.email_log.create_index([("date", -1)])
