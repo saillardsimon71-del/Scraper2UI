@@ -142,21 +142,22 @@ export default function ImportPage() {
             data-testid="btn-sg-import"
             onClick={async () => {
               if (!sgPreview) { toast.error("Lance d'abord l'aperçu"); return; }
-              if (!window.confirm(`Créer ${sgPreview.unique_recipients} prospects depuis SendGrid ?`)) return;
               setSgLoading(true); setSgResult(null);
               try {
+                toast.info(`Création de ${sgPreview.unique_recipients} prospects en cours...`);
                 const res = await api.post("/import/sendgrid", { since_days: sinceDays, dry_run: false, mark_step1_sent: true });
                 setSgResult(res.data);
-                toast.success(`${res.data.created} prospects créés (${res.data.skipped_existing} déjà présents)`);
+                toast.success(`✓ ${res.data.created} prospects créés (${res.data.skipped_existing} déjà présents)`);
               } catch (e) {
-                toast.error(e.response?.data?.detail || "Import impossible");
+                console.error("Import SendGrid:", e);
+                toast.error(e.response?.data?.detail || e.message || "Import impossible");
               } finally { setSgLoading(false); }
             }}
             disabled={sgLoading || !sgPreview}
             className="bg-[#002FA7] hover:bg-[#00227A] text-white rounded-sm"
           >
             <EnvelopeSimple size={16} className="mr-2" />
-            Lancer l'import
+            {sgLoading ? "Import en cours..." : "Lancer l'import"}
           </Button>
         </div>
 

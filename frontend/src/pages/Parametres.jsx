@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AutopilotCard from "@/components/AutopilotCard";
 import WebhookCard from "@/components/WebhookCard";
+import ImapCard from "@/components/ImapCard";
 import BackupCard from "@/components/BackupCard";
 
 export default function Parametres() {
@@ -100,6 +101,8 @@ export default function Parametres() {
       <AutopilotCard />
 
       <WebhookCard />
+
+      <ImapCard />
 
       <BackupCard />
 

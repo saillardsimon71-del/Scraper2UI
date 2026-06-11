@@ -2,10 +2,10 @@
   "collections": {
     "email_log": 0,
     "jobs": 0,
-    "prospects": 0,
+    "prospects": 135,
     "scenarios": 4,
     "settings": 1
   },
-  "last_dump_at": "2026-06-11T22:14:30.806206+00:00",
-  "total_docs": 5
+  "last_dump_at": "2026-06-11T22:25:47.164211+00:00",
+  "total_docs": 140
 }

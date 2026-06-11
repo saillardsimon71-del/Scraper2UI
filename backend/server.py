@@ -42,6 +42,12 @@ from sendgrid_import import (
     aggregate_by_recipient, fetch_sent_messages, _entreprise_from_email_or_subject,
     _extract_site_from_subject,
 )
+from inbox import (
+    classify, fetch_recent_messages, test_connection as test_imap_connection,
+)
+from replies_recovery import (
+    fetch_notifications, fetch_outgoing, match_notifications_to_outgoing,
+)
 from webhook import create_router as create_webhook_router
 
 ROOT_DIR = Path(__file__).parent
@@ -903,7 +909,13 @@ async def read_settings():
             "autopilot_quota_jour": int(s.get("autopilot_quota_jour", 50) or 50),
             "autopilot_heure_debut": int(s.get("autopilot_heure_debut", 9) or 0),
             "autopilot_heure_fin": int(s.get("autopilot_heure_fin", 18) or 24),
-            "autopilot_jours_ouvres": bool(s.get("autopilot_jours_ouvres", True))}
+            "autopilot_jours_ouvres": bool(s.get("autopilot_jours_ouvres", True)),
+            "imap_host": s.get("imap_host", ""),
+            "imap_port": int(s.get("imap_port", 993) or 993),
+            "imap_user": s.get("imap_user", ""),
+            # On renvoie un placeholder pour ne pas exposer le mot de passe
+            "imap_password_set": bool(s.get("imap_password")),
+            "imap_folder": s.get("imap_folder", "INBOX")}
 
 
 @api_router.put("/settings")
@@ -1031,6 +1043,246 @@ async def import_from_sendgrid(body: SendgridImportRequest):
     try:
         await dump_db(db)
     except Exception:  # noqa: BLE001
+        pass
+
+    return summary
+
+
+# ============================================================ Récupération des réponses
+
+class RepliesImportRequest(BaseModel):
+    since_days: int = 30
+    dry_run: bool = False
+
+
+@api_router.post("/import/replies")
+async def import_replies_from_sendgrid(body: RepliesImportRequest):
+    """Récupère les réponses prospects depuis l'historique SendGrid.
+
+    Méthode : le webhook /sendgrid/inbound re-envoie chaque réponse à l'utilisateur
+    sous la forme "[Réponse prospect] Re: <subject>". On lit ces notifications
+    via /v3/messages, on les croise avec les envois sortants pour identifier
+    quel prospect a répondu, puis on marque les prospects.
+    """
+    s = await get_settings()
+    api_key = s.get("sendgrid_api_key", "")
+    self_email = s.get("email_expediteur", "")
+    if not api_key or not self_email:
+        raise HTTPException(400, "Clé SendGrid et email expéditeur requis dans Paramètres.")
+
+    notifications = await fetch_notifications(api_key, self_email, since_days=body.since_days)
+    outgoing = await fetch_outgoing(api_key, self_email, since_days=body.since_days)
+    matches = match_notifications_to_outgoing(notifications, outgoing)
+
+    summary = {
+        "notifications_found": len(notifications),
+        "outgoing_indexed": len(outgoing),
+        "matched": sum(1 for x in matches if x["matched"]),
+        "unmatched": sum(1 for x in matches if not x["matched"]),
+        "prospects_updated": 0,
+        "orphans_saved": 0,
+        "details": [],
+    }
+
+    if body.dry_run:
+        summary["details"] = matches[:20]
+        return summary
+
+    for entry in matches:
+        try:
+            reply_at = entry["reply_at"]
+            prospect_email = entry["prospect_email"]
+            orig_subject = entry["original_subject"]
+
+            if prospect_email:
+                p = await db.prospects.find_one(
+                    {"email": {"$regex": f"^{re.escape(prospect_email)}$", "$options": "i"}},
+                    {"_id": 0, "id": 1, "entreprise": 1, "statut": 1},
+                )
+            else:
+                p = None
+
+            history_entry = {
+                "type": "reponse_email",
+                "action": "repondu",
+                "date": reply_at,
+                "objet": orig_subject,
+                "source": "sendgrid_recovery",
+                "sendgrid_msg_id": entry["notif_msg_id"],
+            }
+            reponse_doc = {
+                "id": str(uuid.uuid4()),
+                "de": prospect_email or "",
+                "objet": orig_subject,
+                "texte": "(contenu non disponible — récupéré via SendGrid Activity, voir boîte email)",
+                "action": "repondu",
+                "prospect_id": p["id"] if p else None,
+                "entreprise": (p.get("entreprise") if p else "") or "",
+                "date": reply_at,
+                "source": "sendgrid_recovery",
+            }
+
+            # Insertion en upsert sur le msg_id pour idempotence
+            existing_reply = await db.reponses.find_one(
+                {"sendgrid_msg_id": entry["notif_msg_id"]}
+            )
+            if existing_reply:
+                continue  # déjà importé
+            reponse_doc["sendgrid_msg_id"] = entry["notif_msg_id"]
+            await db.reponses.insert_one(reponse_doc)
+
+            if p:
+                # Met à jour le prospect (sans écraser opt_out si déjà désabonné)
+                current_statut = p.get("statut")
+                new_statut = "repondu" if current_statut not in ("opt_out", "rdv_pris") else current_statut
+                await db.prospects.update_one(
+                    {"id": p["id"]},
+                    {"$set": {"statut": new_statut, "reply_action": "repondu"},
+                     "$push": {"historique": history_entry}},
+                )
+                summary["prospects_updated"] += 1
+            else:
+                summary["orphans_saved"] += 1
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Import réponses : erreur (%s)", exc)
+
+    try:
+        await dump_db(db)
+    except Exception:
+        pass
+
+    return summary
+
+
+@api_router.get("/replies")
+async def list_replies(limit: int = 100):
+    """Liste les réponses (liées et orphelines), les plus récentes en premier."""
+    items = await db.reponses.find({}, {"_id": 0}).sort("date", -1).limit(limit).to_list(limit)
+    return {"items": items, "count": len(items)}
+
+
+# ============================================================ Boîte mail IMAP
+
+class InboxSyncRequest(BaseModel):
+    since_days: int = 30
+    dry_run: bool = False
+
+
+@api_router.post("/inbox/test")
+async def inbox_test():
+    """Teste la connexion IMAP avec les paramètres en base."""
+    s = await get_settings()
+    host = s.get("imap_host", "")
+    user = s.get("imap_user", "") or s.get("email_expediteur", "")
+    password = s.get("imap_password", "")
+    port = int(s.get("imap_port", 993) or 993)
+    if not host or not user or not password:
+        raise HTTPException(400, "Host, utilisateur et mot de passe IMAP requis.")
+    return await test_imap_connection(host, port, user, password)
+
+
+@api_router.post("/inbox/sync")
+async def inbox_sync(body: InboxSyncRequest):
+    """Lit la boîte mail IMAP, identifie les réponses prospects, met à jour la base."""
+    s = await get_settings()
+    host = s.get("imap_host", "")
+    user = s.get("imap_user", "") or s.get("email_expediteur", "")
+    password = s.get("imap_password", "")
+    port = int(s.get("imap_port", 993) or 993)
+    folder = s.get("imap_folder", "INBOX") or "INBOX"
+    self_email = s.get("email_expediteur", "") or user
+    if not host or not user or not password:
+        raise HTTPException(400, "Configurez d'abord les paramètres IMAP.")
+
+    try:
+        messages = await fetch_recent_messages(
+            host=host, port=port, user=user, password=password,
+            since_days=body.since_days, folder=folder, self_email=self_email,
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(500, f"IMAP : {type(exc).__name__} : {exc}") from exc
+
+    summary = {
+        "messages_read": len(messages),
+        "linked": 0,           # réponses liées à un prospect
+        "orphans": 0,          # réponses sans prospect correspondant
+        "already_imported": 0,
+        "prospects_updated": 0,
+        "details": [],
+    }
+
+    if body.dry_run:
+        summary["details"] = [{
+            "from_email": m["from_email"],
+            "from_name": m["from_name"],
+            "subject": m["subject"],
+            "date": m["date"],
+            "excerpt": m["body_excerpt"],
+        } for m in messages[:30]]
+        return summary
+
+    for m in messages:
+        try:
+            from_email = m["from_email"]
+            if not from_email:
+                continue
+            message_id = m.get("message_id") or ""
+            # Idempotence : skip si déjà importé (par Message-ID)
+            if message_id:
+                existing = await db.reponses.find_one({"imap_message_id": message_id})
+                if existing:
+                    summary["already_imported"] += 1
+                    continue
+
+            p = await db.prospects.find_one(
+                {"email": {"$regex": f"^{re.escape(from_email)}$", "$options": "i"}},
+                {"_id": 0, "id": 1, "entreprise": 1, "statut": 1},
+            )
+            action = classify(m["body"], m["subject"])
+            now = datetime.now(timezone.utc).isoformat()
+            reponse_doc = {
+                "id": str(uuid.uuid4()),
+                "de": from_email,
+                "de_complet": m["from_name"] or from_email,
+                "objet": m["subject"][:300],
+                "texte": m["body"][:4000],
+                "extrait": m["body_excerpt"],
+                "action": action,
+                "prospect_id": p["id"] if p else None,
+                "entreprise": (p.get("entreprise") if p else "") or "",
+                "date": m["date"] or now,
+                "source": "imap",
+                "imap_message_id": message_id,
+                "imap_uid": m["uid"],
+            }
+            await db.reponses.insert_one(reponse_doc)
+
+            if p:
+                current_statut = p.get("statut")
+                if action == "desabonne":
+                    new_statut = "opt_out"
+                elif action == "interesse":
+                    new_statut = "interesse" if current_statut not in ("opt_out", "rdv_pris") else current_statut
+                else:
+                    new_statut = "repondu" if current_statut not in ("opt_out", "rdv_pris", "interesse") else current_statut
+                await db.prospects.update_one(
+                    {"id": p["id"]},
+                    {"$set": {"statut": new_statut, "reply_action": action},
+                     "$push": {"historique": {
+                         "type": "reponse_email", "action": action, "date": m["date"] or now,
+                         "objet": m["subject"][:200], "extrait": m["body_excerpt"][:300],
+                         "source": "imap"}}},
+                )
+                summary["linked"] += 1
+                summary["prospects_updated"] += 1
+            else:
+                summary["orphans"] += 1
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Inbox sync : erreur sur %s (%s)", m.get("from_email"), exc)
+
+    try:
+        await dump_db(db)
+    except Exception:
         pass
 
     return summary

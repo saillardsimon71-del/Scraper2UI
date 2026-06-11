@@ -8,12 +8,14 @@ import {
   ChatsCircle,
   GearSix,
   Crosshair,
+  EnvelopeOpen,
 } from "@phosphor-icons/react";
 
 const NAV = [
   { to: "/", label: "File du jour", icon: SunHorizon, testid: "nav-file-du-jour" },
   { to: "/prospects", label: "Prospects", icon: UsersThree, testid: "nav-prospects" },
   { to: "/pipeline", label: "Pipeline", icon: Kanban, testid: "nav-pipeline" },
+  { to: "/reponses", label: "Réponses", icon: EnvelopeOpen, testid: "nav-reponses" },
   { to: "/scraper", label: "Scraper", icon: MagnifyingGlass, testid: "nav-scraper" },
   { to: "/import", label: "Import", icon: UploadSimple, testid: "nav-import" },
   { to: "/scenarios", label: "Séquences", icon: ChatsCircle, testid: "nav-scenarios" },
