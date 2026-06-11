@@ -68,7 +68,7 @@ export default function Parametres() {
           <Sparkle size={14} /> IA — amélioration des messages
         </div>
         <p className="text-xs text-slate-500 leading-relaxed">
-          L'amélioration IA des messages utilise la clé universelle Emergent (GPT-5.4), déjà configurée. Aucune action requise.
+          L'amélioration IA des messages utilise la clé universelle Emergent (GPT-5), déjà configurée. Aucune action requise.
         </p>
       </div>
     </div>

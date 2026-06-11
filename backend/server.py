@@ -569,7 +569,7 @@ async def ai_improve(body: AIImproveRequest):
         api_key=os.environ["EMERGENT_LLM_KEY"],
         session_id=f"improve-{uuid.uuid4()}",
         system_message=system,
-    ).with_model("openai", "gpt-5.4")
+    ).with_model("openai", os.environ.get("AI_MODEL", "gpt-5"))
 
     full = ""
     try:
