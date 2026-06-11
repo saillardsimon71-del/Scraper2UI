@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { MagnifyingGlass, Trash, DownloadSimple } from "@phosphor-icons/react";
+import { MagnifyingGlass, Trash, DownloadSimple, WhatsappLogo, LinkedinLogo, EnvelopeSimple } from "@phosphor-icons/react";
 import api, { NIVEAU_STYLES, PROFIL_LABELS, STATUT_LABELS, STATUT_STYLES } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,12 @@ import {
 import ProspectSheet from "@/components/ProspectSheet";
 
 const ALL = "__all__";
+
+const CANAL_ICONS = {
+  email: <EnvelopeSimple size={15} className="text-slate-700" />,
+  whatsapp: <WhatsappLogo size={15} className="text-[#25D366]" />,
+  linkedin: <LinkedinLogo size={15} className="text-[#0A66C2]" />,
+};
 
 export default function Prospects() {
   const [items, setItems] = useState([]);
@@ -130,8 +136,9 @@ export default function Prospects() {
               <th className="px-4 py-3 font-semibold">Métier / Ville</th>
               <th className="px-4 py-3 font-semibold">Site</th>
               <th className="px-4 py-3 font-semibold">Profil</th>
+              <th className="px-4 py-3 font-semibold">Canal</th>
               <th className="px-4 py-3 font-semibold">Statut</th>
-              <th className="px-4 py-3 font-semibold">Étape</th>
+              <th className="px-4 py-3 font-semibold">Séquence</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -154,12 +161,21 @@ export default function Prospects() {
                   {p.site_web && p.site_web !== "Pas de site" ? `${p.note_site}/100` : "—"}
                 </td>
                 <td className="px-4 py-2.5 text-slate-600">{PROFIL_LABELS[p.profil] || p.profil}</td>
+                <td className="px-4 py-2.5" data-testid="cell-canal" title={p.canal_contact}>
+                  {CANAL_ICONS[p.canal_contact] || "—"}
+                </td>
                 <td className="px-4 py-2.5">
                   <Badge variant="outline" className={`rounded-sm text-[11px] ${STATUT_STYLES[p.statut] || ""}`}>
                     {STATUT_LABELS[p.statut] || p.statut}
                   </Badge>
                 </td>
-                <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{p.etape_relance}/3</td>
+                <td className="px-4 py-2.5 font-mono text-xs" data-testid="cell-sequence">
+                  {p.statut === "a_contacter" && p.etape_relance > 1 ? (
+                    <span className="text-emerald-700 font-semibold">en cours · {p.etape_relance}/4</span>
+                  ) : (
+                    <span className="text-slate-500">{p.etape_relance}/4</span>
+                  )}
+                </td>
                 <td className="px-4 py-2.5 text-right">
                   <Button
                     data-testid="btn-delete-prospect"
@@ -175,7 +191,7 @@ export default function Prospects() {
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-slate-400">
+                <td colSpan={9} className="px-4 py-12 text-center text-slate-400">
                   Aucun prospect — lancez le scraper ou importez un fichier.
                 </td>
               </tr>
