@@ -22,6 +22,17 @@ logger = logging.getLogger(__name__)
 # Collections à sauvegarder (toutes les données métier)
 BACKUP_COLLECTIONS = ["prospects", "settings", "scenarios", "email_log", "jobs"]
 
+# Champs sensibles redacted dans le backup (jamais commités sur Git).
+# Au restore, ces champs sont ignorés : il faut les ressaisir dans Paramètres
+# (depuis backend/.env ou via l'UI) si la base est repartie de zéro.
+SENSITIVE_FIELDS = {
+    "sendgrid_api_key",
+    "serper_api_key",
+    "imap_password",
+    "webhook_token",  # token de webhook, à régénérer en cas de perte
+}
+REDACTED_MARKER = "***REDACTED***"
+
 BACKUP_DIR = Path(os.environ.get("BACKUP_DIR", "/app/data/backup"))
 BACKUP_INTERVAL_SECONDS = int(os.environ.get("BACKUP_INTERVAL_SECONDS", "300"))  # 5 min
 MANIFEST_FILE = "manifest.json"
@@ -58,6 +69,12 @@ async def dump_db(db) -> dict:
         def _sort_key(d: dict) -> str:
             return str(d.get("id") or d.get("_id") or "")
         payload_sorted = sorted(payload, key=_sort_key)
+        # Redacter les champs sensibles dans la collection settings
+        if name == "settings":
+            for doc in payload_sorted:
+                for field in SENSITIVE_FIELDS:
+                    if field in doc and doc[field]:
+                        doc[field] = REDACTED_MARKER
         path = _collection_path(name)
         path.write_text(
             json.dumps(payload_sorted, ensure_ascii=False, indent=2, sort_keys=True),
@@ -95,6 +112,24 @@ async def restore_db(db, *, drop_existing: bool = False) -> dict:
             continue
         if not isinstance(docs, list) or not docs:
             continue
+        # Pour settings : préserver les secrets actuels en DB s'ils sont redactés dans le backup
+        if name == "settings":
+            current_secrets: dict = {}
+            try:
+                current = await db.settings.find_one({"_id": "global"}) or {}
+                for f in SENSITIVE_FIELDS:
+                    if current.get(f):
+                        current_secrets[f] = current[f]
+            except Exception:
+                pass
+            for doc in docs:
+                for f in SENSITIVE_FIELDS:
+                    if doc.get(f) == REDACTED_MARKER:
+                        # On garde la valeur actuelle en DB si elle existe, sinon on supprime
+                        if f in current_secrets:
+                            doc[f] = current_secrets[f]
+                        else:
+                            doc.pop(f, None)
         if drop_existing:
             await db[name].delete_many({})
         # Insertion en bulk ; on ignore les doublons (clé _id).
