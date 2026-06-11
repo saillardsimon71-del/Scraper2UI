@@ -234,6 +234,14 @@ OSM_CRAFT = {
 }
 
 
+# Miroirs Overpass, essayés dans l'ordre (le 1er peut être bloqué selon le réseau)
+OVERPASS_ENDPOINTS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+]
+
+
 async def discover_osm(http: httpx.AsyncClient, metier: str, ville: str,
                        rayon_km: int = 15, limite: int = 30) -> list[dict]:
     # Géocodage Nominatim
@@ -256,8 +264,19 @@ async def discover_osm(http: httpx.AsyncClient, metier: str, ville: str,
         parts.append(f'way{f}(around:{radius},{lat},{lon});')
     query = f"[out:json][timeout:60];({''.join(parts)});out center tags {limite * 3};"
 
-    resp = await http.post("https://overpass-api.de/api/interpreter", data={"data": query}, timeout=90)
-    resp.raise_for_status()
+    # Plusieurs serveurs Overpass : bascule automatique si l'un est injoignable
+    resp = None
+    last_err: Exception | None = None
+    for url in OVERPASS_ENDPOINTS:
+        try:
+            resp = await http.post(url, data={"data": query}, timeout=90)
+            resp.raise_for_status()
+            break
+        except httpx.HTTPError as e:
+            last_err = e
+            resp = None
+    if resp is None:
+        raise RuntimeError(f"Serveurs Overpass (OSM) injoignables : {last_err}")
     elements = resp.json().get("elements", [])
 
     results, seen = [], set()
