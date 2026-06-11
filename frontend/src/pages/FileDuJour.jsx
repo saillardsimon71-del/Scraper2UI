@@ -8,6 +8,8 @@ import {
   ArrowBendUpRight,
   Eye,
   Fire,
+  Warning,
+  Leaf,
 } from "@phosphor-icons/react";
 import api, { NIVEAU_STYLES, PROFIL_LABELS } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -137,6 +139,28 @@ export default function FileDuJour() {
                         <span className="text-xs text-slate-400 font-mono">
                           étape {item.etape}/{item.total_etapes} · {item.canal}
                         </span>
+                        {item.canal === "linkedin" && (
+                          <Badge
+                            data-testid="badge-linkedin-warning"
+                            variant="outline"
+                            className="rounded-sm text-[11px] bg-amber-50 text-amber-700 border-amber-200"
+                            title="Seul contact trouvé : LinkedIn. Pour un artisan c'est rarement la cible (PME / franchise ?) — vérifiez avant d'envoyer."
+                          >
+                            <Warning size={11} weight="fill" className="mr-1" />
+                            LinkedIn seul — hors cible ?
+                          </Badge>
+                        )}
+                        {item.accroche_saison && (
+                          <Badge
+                            data-testid="badge-saison"
+                            variant="outline"
+                            className="rounded-sm text-[11px] bg-emerald-50 text-emerald-700 border-emerald-200"
+                            title={item.accroche_saison}
+                          >
+                            <Leaf size={11} weight="fill" className="mr-1" />
+                            Saison
+                          </Badge>
+                        )}
                       </div>
                       <div className="text-xs text-slate-500 mt-0.5 truncate">
                         {p.metier} · {p.ville} {p.telephone && `· ${p.telephone}`}

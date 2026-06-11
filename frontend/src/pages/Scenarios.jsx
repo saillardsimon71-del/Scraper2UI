@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const VARIABLES = ["{entreprise}", "{ville}", "{metier}", "{site_web}", "{signal}", "{note_site}", "{prenom_exp}", "{lien_rdv}"];
+const VARIABLES = ["{entreprise}", "{ville}", "{metier}", "{site_web}", "{signal}", "{note_site}", "{prenom_exp}", "{lien_rdv}", "{offre}", "{accroche_saison}"];
 
 export default function Scenarios() {
   const [scenarios, setScenarios] = useState([]);
@@ -38,6 +38,7 @@ export default function Scenarios() {
         delai_jours: Number(e.delai_jours) || 0,
         template: e.template,
         objet: e.objet || "",
+        template_court: e.template_court || "",
       })),
     });
     toast.success(`Séquence « ${sc.label} » enregistrée`);
@@ -135,6 +136,17 @@ export default function Scenarios() {
                   value={e.template}
                   onChange={(ev) => updateEtape(sc.profil, idx, "template", ev.target.value)}
                   rows={3}
+                  className="rounded-sm text-sm"
+                />
+                <label className="text-[11px] font-medium text-slate-500 mt-3 mb-1 block">
+                  Variante courte WhatsApp / LinkedIn (2-3 lignes — vide = message complet utilisé)
+                </label>
+                <Textarea
+                  data-testid={`textarea-template-court-${sc.profil}-${e.etape}`}
+                  value={e.template_court || ""}
+                  onChange={(ev) => updateEtape(sc.profil, idx, "template_court", ev.target.value)}
+                  rows={2}
+                  placeholder="Version courte envoyée sur WhatsApp et LinkedIn"
                   className="rounded-sm text-sm"
                 />
               </div>

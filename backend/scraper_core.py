@@ -585,10 +585,12 @@ async def audit_site(http: httpx.AsyncClient, site_web: str, telephone: str, met
 
 # ---------------------------------------------------------------- scoring conversion
 
-POIDS_ABSENCE_SITE, POIDS_JOIGNABLE, POIDS_EMAIL, POIDS_SIGNAUX, POIDS_WHATSAPP, POIDS_RATING = 25, 15, 15, 25, 10, 10
+# Site ancien > pas de site : l'artisan au site daté a déjà investi (douleur ressentie),
+# celui sans site a souvent survécu des années au bouche-à-oreille (pas de douleur).
+POIDS_SITE_ANCIEN, POIDS_ABSENCE_SITE, POIDS_JOIGNABLE, POIDS_EMAIL, POIDS_SIGNAUX, POIDS_WHATSAPP, POIDS_RATING = 30, 18, 15, 15, 25, 10, 10
 
 SIGNAL_POIDS = {
-    "pas_de_site": 0.30, "site_en_construction": 0.20, "copyright_obsolete": 0.15,
+    "pas_de_site": 0.18, "site_en_construction": 0.22, "copyright_obsolete": 0.25,
     "pas_de_telephone": 0.10, "pas_de_contact": 0.10, "devis_gratuit": 0.05,
     "blog_inactif": 0.05, "contenu_limite": 0.05,
 }
@@ -611,9 +613,9 @@ def compute_score(p: dict) -> tuple[int, str]:
     if not has_real_website(site):
         score += POIDS_ABSENCE_SITE
     elif note < 50:
-        score += POIDS_ABSENCE_SITE
+        score += POIDS_SITE_ANCIEN  # il a déjà essayé : prospect le plus chaud
     elif note < 70:
-        score += POIDS_ABSENCE_SITE // 2
+        score += POIDS_SITE_ANCIEN // 2
 
     if p.get("telephone"):
         score += POIDS_JOIGNABLE

@@ -9,6 +9,7 @@ import Reponses from "@/pages/Reponses";
 import Scraper from "@/pages/Scraper";
 import ImportPage from "@/pages/ImportPage";
 import Scenarios from "@/pages/Scenarios";
+import ScriptVente from "@/pages/ScriptVente";
 import Parametres from "@/pages/Parametres";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
             <Route path="/scraper" element={<Scraper />} />
             <Route path="/import" element={<ImportPage />} />
             <Route path="/scenarios" element={<Scenarios />} />
+            <Route path="/script" element={<ScriptVente />} />
             <Route path="/parametres" element={<Parametres />} />
           </Route>
         </Routes>

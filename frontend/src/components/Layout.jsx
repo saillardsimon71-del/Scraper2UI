@@ -9,6 +9,7 @@ import {
   GearSix,
   Crosshair,
   EnvelopeOpen,
+  Handshake,
 } from "@phosphor-icons/react";
 
 const NAV = [
@@ -19,6 +20,7 @@ const NAV = [
   { to: "/scraper", label: "Scraper", icon: MagnifyingGlass, testid: "nav-scraper" },
   { to: "/import", label: "Import", icon: UploadSimple, testid: "nav-import" },
   { to: "/scenarios", label: "Séquences", icon: ChatsCircle, testid: "nav-scenarios" },
+  { to: "/script", label: "Script de vente", icon: Handshake, testid: "nav-script-vente" },
   { to: "/parametres", label: "Paramètres", icon: GearSix, testid: "nav-parametres" },
 ];
 

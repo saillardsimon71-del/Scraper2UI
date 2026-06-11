@@ -11,7 +11,7 @@ import BackupCard from "@/components/BackupCard";
 
 export default function Parametres() {
   const [form, setForm] = useState({
-    prenom_expediteur: "", lien_rdv: "", serper_api_key: "", sendgrid_api_key: "", email_expediteur: "",
+    prenom_expediteur: "", lien_rdv: "", offre: "", serper_api_key: "", sendgrid_api_key: "", email_expediteur: "",
   });
 
   useEffect(() => {
@@ -49,6 +49,19 @@ export default function Parametres() {
             className="rounded-sm"
           />
           <p className="text-[11px] text-slate-400 mt-1">Inséré dans les messages où la variable est présente.</p>
+        </div>
+        <div>
+          <label className="text-xs font-medium text-slate-600 mb-1 block">Votre offre (variable {"{offre}"})</label>
+          <Input
+            data-testid="input-offre"
+            value={form.offre || ""}
+            onChange={(e) => setForm({ ...form, offre: e.target.value })}
+            placeholder="un site pro à partir de 300 €, livré en 72 h, spécialement pensé pour les artisans"
+            className="rounded-sm"
+          />
+          <p className="text-[11px] text-slate-400 mt-1">
+            Le positionnement concret (prix, délai, cible) inséré dans les relances. Laissez vide pour la valeur par défaut.
+          </p>
         </div>
         <div>
           <label className="text-xs font-medium text-slate-600 mb-1 block">Clé Serper (recherche Google des sites — optionnel)</label>

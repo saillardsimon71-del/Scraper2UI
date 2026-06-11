@@ -1,0 +1,39 @@
+{
+  "summary": "Itération 4 — Tests des améliorations commerciales (scénarios v2, template_court, offre, script de vente, badges). Backend : 10/10 pytest passent (100%). Frontend : 7/7 pages OK, sidebar nav-script-vente présent, page /script affiche les 3 règles d'or + trame 5 étapes + 6 objection-cards, input-offre sauvegarde + persiste après reload, Scenarios.jsx affiche 4 textarea-template-court par profil actif (Tabs render uniquement le profil sélectionné — comportement normal), pastilles {offre} et {accroche_saison} présentes, édition variante courte persiste après reload, File du jour/Pipeline/Prospects/Réponses se chargent sans erreur console (0 pageerror). 1 BUG TROUVÉ et CORRIGÉ : GET /api/settings n'incluait pas le champ 'offre' dans sa réponse — PUT le sauvegardait en DB mais GET ne le renvoyait pas, ce qui aurait cassé la persistance UI au reload de Paramètres. Ajouté la ligne `\"offre\": s.get(\"offre\", \"\")` dans read_settings() (server.py ligne ~912).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/settings", "issue": "Le champ 'offre' n'était pas renvoyé par read_settings() — fix appliqué (ajout de offre dans le dict retourné). PUT sauvegardait bien en DB mais le frontend ne pouvait pas le récupérer au reload."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration4.py",
+    "/app/test_reports/pytest/iteration4_results.xml"
+  ],
+  "action_items": [
+    "Aucun blocage restant. Le fix backend (read_settings retourne 'offre') a été appliqué et validé en bout-en-bout (UI sauvegarde + reload persiste).",
+    "Optionnel : badge-linkedin-warning, badge-saison, icon-linkedin-warning n'ont pas pu être visuellement validés car aucun prospect actuel en base ne correspond aux critères (canal=linkedin ET en file du jour ; métier saisonnier en mois courant). Les data-testid sont bien présents dans le code (FileDuJour.jsx l.144/l.155, Prospects.jsx l.210) — main agent peut self-test en créant un prospect linkedin via import CSV avec entreprise+linkedin_url, sans email/mobile."
+  ],
+  "critical_code_review_comments": [
+    "server.py read_settings() (l.909) — le champ 'offre' avait été ajouté dans SettingsUpdate (l.112) mais oublié dans le sérialiseur de lecture. Pattern fragile : à chaque nouveau champ settings, il faut mettre à jour 2 endroits. Envisager d'utiliser un Pydantic model pour la réponse aussi, ou un loop sur les clés autorisées.",
+    "server.py dépasse maintenant 1444 lignes — la modularisation suggérée en iter3 reste pertinente (extraire routes settings/scenarios/scraper/IA).",
+    "Scenarios.jsx (Tabs render lazy) : un seul profil visible à la fois — bon UX mais signale que les tests d'intégration doivent itérer par onglet, ne pas s'attendre à 16 textareas simultanées.",
+    "prospection.py — DEFAULT_OFFRE fallback est codé en dur (l.21) ; cohérent avec offre=null en DB."
+  ],
+  "updated_files": [
+    "/app/backend/server.py (ajout du champ 'offre' dans la réponse de read_settings)",
+    "/app/backend/tests/test_iteration4.py (nouveau fichier, 10 tests)"
+  ],
+  "success_rate": {"backend": "100% (10/10)", "frontend": "100% (toutes pages OK, 0 page error)"},
+  "test_credentials": "N/A — pas d'auth.",
+  "seed_data_creation": "Prospects de test créés via /api/import (TEST_ITER4_WhatsApp, TEST_ITER4_Email, TEST_ITER4_Autopilot) — tous supprimés en fin de fixture. Settings 'offre' restauré à la valeur initiale après chaque test. Scenario site_moyen et pas_de_site restaurés. Aucune pollution résiduelle.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Tous les flux iter4 validés. Bug 'offre missing in GET /api/settings' fixé. Si retest des badges UI (linkedin/saison), créer manuellement un prospect avec linkedin_url + sans email/mobile pour forcer canal=linkedin, et un couvreur en juin (mois courant) pour déclencher badge-saison. Les settings sont actuellement : autopilot_actif=false (changé par un test précédent ?), quota=50, offre vide. Le test test_autopilot_run_sends_to_test_prospect (iter3) envoie un vrai email à simon@sitequivend.fr — ne pas le relancer en boucle.",
+  "rca of the issue": "Bug GET /api/settings sans 'offre' : ajout incomplet du champ par main agent. SettingsUpdate model (l.112) accepte offre, PUT le persiste en MongoDB, mais read_settings() (l.909) construit explicitement un dict de retour qui omettait 'offre'. Reproduction : PUT /api/settings {\"offre\":\"X\"} retourne s sans offre ; GET ne le renvoie pas → frontend reload = champ vide même après save. Fix : ajout d'une ligne `\"offre\": s.get(\"offre\", \"\"),` dans le dict retourné par read_settings. Validation bout-en-bout : pytest test_settings_offre_persists PASS + UI parametres save+reload PASS."
+}

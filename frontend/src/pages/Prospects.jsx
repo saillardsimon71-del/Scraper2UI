@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { MagnifyingGlass, Trash, DownloadSimple, WhatsappLogo, LinkedinLogo, EnvelopeSimple, Phone, MagicWand } from "@phosphor-icons/react";
+import { MagnifyingGlass, Trash, DownloadSimple, WhatsappLogo, LinkedinLogo, EnvelopeSimple, Phone, MagicWand, Warning } from "@phosphor-icons/react";
 import api, { NIVEAU_STYLES, PROFIL_LABELS, STATUT_LABELS, STATUT_STYLES } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -197,8 +197,19 @@ export default function Prospects() {
                   {p.site_web && p.site_web !== "Pas de site" ? `${p.note_site}/100` : "—"}
                 </td>
                 <td className="px-4 py-2.5 text-slate-600">{PROFIL_LABELS[p.profil] || p.profil}</td>
-                <td className="px-4 py-2.5" data-testid="cell-canal" title={p.canal_contact}>
-                  {CANAL_ICONS[p.canal_contact] || "—"}
+                <td
+                  className="px-4 py-2.5"
+                  data-testid="cell-canal"
+                  title={p.canal_contact === "linkedin"
+                    ? "Seul contact : LinkedIn — probablement hors cible artisan (PME / franchise ?)"
+                    : p.canal_contact}
+                >
+                  <span className="inline-flex items-center gap-1">
+                    {CANAL_ICONS[p.canal_contact] || "—"}
+                    {p.canal_contact === "linkedin" && (
+                      <Warning size={13} weight="fill" className="text-amber-500" data-testid="icon-linkedin-warning" />
+                    )}
+                  </span>
                 </td>
                 <td className="px-4 py-2.5">
                   <Badge variant="outline" className={`rounded-sm text-[11px] ${STATUT_STYLES[p.statut] || ""}`}>

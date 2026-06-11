@@ -23,7 +23,8 @@ from starlette.middleware.cors import CORSMiddleware
 
 from prospection import (
     DEFAULT_SCENARIOS, PROFIL_LABELS, PROFILS, STATUT_LABELS,
-    advance_updates, determine_canal, determine_profil, render_message,
+    accroche_saison, advance_updates, determine_canal, determine_profil,
+    render_message, step_template,
 )
 from scraper_core import (
     METIERS, USER_AGENT, as_str, audit_site, build_linkedin_link, build_wa_link,
@@ -108,6 +109,7 @@ class AIImproveRequest(BaseModel):
 class SettingsUpdate(BaseModel):
     prenom_expediteur: Optional[str] = None
     lien_rdv: Optional[str] = None
+    offre: Optional[str] = None
     serper_api_key: Optional[str] = None
     sendgrid_api_key: Optional[str] = None
     email_expediteur: Optional[str] = None
@@ -130,6 +132,7 @@ class EtapeModel(BaseModel):
     delai_jours: int
     template: str
     objet: str = ""
+    template_court: str = ""  # variante 2-3 lignes pour WhatsApp / LinkedIn
 
 
 class MiniAuditRequest(BaseModel):
@@ -221,14 +224,15 @@ async def build_queue_item(p: dict, settings: dict) -> dict:
     etapes = scenario.get("etapes", [])
     idx = min(max(int(p.get("etape_relance", 1)) - 1, 0), len(etapes) - 1) if etapes else 0
     step = etapes[idx] if etapes else {"etape": 1, "template": "", "delai_jours": 0}
-    message = as_str(p.get("message_personnalise")) or render_message(step.get("template", ""), p, settings)
     canal = p.get("canal_contact") or determine_canal(p) or "whatsapp"
+    message = as_str(p.get("message_personnalise")) or render_message(step_template(step, canal), p, settings)
     return {
         "prospect": p,
         "etape": step.get("etape", 1),
         "total_etapes": len(etapes),
         "canal": canal,
         "message": message,
+        "accroche_saison": accroche_saison(as_str(p.get("metier"))),
         "wa_link": build_wa_link(p.get("telephone", ""), message),
         "linkedin_link": build_linkedin_link(p.get("linkedin_url", ""), p.get("entreprise", ""), p.get("ville", "")),
     }
@@ -315,7 +319,7 @@ async def get_prospect(prospect_id: str):
     item = await build_queue_item(p, settings)
     scenario = await get_scenario(p.get("profil", "site_moyen"))
     apercu = [{"etape": e["etape"], "canal": item["canal"], "delai_jours": e["delai_jours"],
-               "message": render_message(e["template"], p, settings)} for e in scenario.get("etapes", [])]
+               "message": render_message(step_template(e, item["canal"]), p, settings)} for e in scenario.get("etapes", [])]
     item["sequence"] = apercu
     return item
 
@@ -370,7 +374,7 @@ async def prospect_action(prospect_id: str, body: ActionRequest):
             idx = min(max(int(p.get("etape_relance", 1)) - 1, 0), len(etapes) - 1)
             event["canal"] = p.get("canal_contact", "")
             event["message"] = as_str(p.get("message_personnalise")) or render_message(
-                etapes[idx].get("template", ""), p, settings)
+                step_template(etapes[idx], event["canal"]), p, settings)
         updates.update(advance_updates(p, etapes))
     elif action == "skip":
         updates["date_prochaine_action"] = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
@@ -663,7 +667,7 @@ async def update_scenario(profil: str, body: ScenarioUpdate):
         raise HTTPException(404, "Profil inconnu")
     base = DEFAULT_SCENARIOS[profil]
     doc = {"profil": profil, "label": base["label"], "description": base["description"],
-           "etapes": [e.model_dump() for e in body.etapes]}
+           "version": base.get("version", 1), "etapes": [e.model_dump() for e in body.etapes]}
     await db.scenarios.update_one({"profil": profil}, {"$set": doc}, upsert=True)
     return doc
 
@@ -906,6 +910,7 @@ async def read_settings():
     s = await get_settings()
     return {"prenom_expediteur": s.get("prenom_expediteur", ""),
             "lien_rdv": s.get("lien_rdv", ""),
+            "offre": s.get("offre", ""),
             "serper_api_key": s.get("serper_api_key", ""),
             "sendgrid_api_key": s.get("sendgrid_api_key", ""),
             "email_expediteur": s.get("email_expediteur", ""),
@@ -1386,13 +1391,34 @@ async def migrate_canal_unique():
     logger.info(f"Migration canal unique : {res.deleted_count} prospect(s) sans contact supprimé(s)")
 
 
+async def migrate_scoring_v2():
+    """Rescoring one-shot : le profil « site ancien » pèse désormais plus que « pas de site »."""
+    s = await db.settings.find_one({"_id": "global"}) or {}
+    if s.get("migration_scoring_v2"):
+        return
+    n = 0
+    async for p in db.prospects.find({}, {"_id": 0}):
+        score, niveau = compute_score(p)
+        if score != int(p.get("score_conversion", 0) or 0):
+            await db.prospects.update_one(
+                {"id": p["id"]}, {"$set": {"score_conversion": score, "niveau_conversion": niveau}})
+            n += 1
+    await db.settings.update_one(
+        {"_id": "global"}, {"$set": {"migration_scoring_v2": True}}, upsert=True)
+    logger.info(f"Migration scoring v2 : {n} prospect(s) rescoré(s)")
+
+
 @app.on_event("startup")
 async def seed():
     for profil, sc in DEFAULT_SCENARIOS.items():
         existing = await db.scenarios.find_one({"profil": profil})
         if not existing:
             await db.scenarios.insert_one({**sc})
+        elif int(existing.get("version", 1) or 1) < int(sc.get("version", 1)):
+            # Templates par défaut mis à jour → on remplace l'ancienne version
+            await db.scenarios.replace_one({"profil": profil}, {**sc})
     await migrate_canal_unique()
+    await migrate_scoring_v2()
     if not await db.settings.find_one({"_id": "global"}):
         await db.settings.insert_one({"_id": "global", "prenom_expediteur": "Simon",
                                       "lien_rdv": "", "serper_api_key": ""})
