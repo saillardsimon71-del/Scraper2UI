@@ -70,8 +70,8 @@ export default function AutopilotCard() {
             <Robot size={14} /> Pilote automatique — emails
           </div>
           <p className="text-xs text-slate-500 mt-2 leading-relaxed max-w-md">
-            Envoie automatiquement les étapes <strong>email</strong> des séquences aux prospects dus
-            (relances incluses). S'arrête dès qu'un prospect répond ou se désabonne.
+            Gère <strong>toute la séquence</strong> (étape 1 → dernière relance) des prospects au
+            canal <strong>email</strong>. S'arrête dès qu'un prospect répond ou se désabonne.
           </p>
         </div>
         <div className="flex items-center gap-2">

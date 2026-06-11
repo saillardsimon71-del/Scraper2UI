@@ -212,18 +212,26 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
                   </Button>
                 </div>
                 <div className="flex gap-2 mt-3">
-                  {data.wa_link && (
+                  {data.canal === "whatsapp" && data.wa_link && (
                     <a href={`https://wa.me/${data.wa_link.split("wa.me/")[1].split("?")[0]}?text=${encodeURIComponent(draft)}`} target="_blank" rel="noreferrer" className="flex-1">
                       <Button data-testid="sheet-btn-whatsapp" className="w-full bg-[#25D366] hover:bg-[#1DA851] text-white rounded-sm h-9">
                         <WhatsappLogo size={16} weight="fill" className="mr-2" /> WhatsApp
                       </Button>
                     </a>
                   )}
-                  <a href={data.linkedin_link} target="_blank" rel="noreferrer" className="flex-1" onClick={() => copy(draft)}>
-                    <Button data-testid="sheet-btn-linkedin" className="w-full bg-[#0A66C2] hover:bg-[#004182] text-white rounded-sm h-9">
-                      <LinkedinLogo size={16} weight="fill" className="mr-2" /> LinkedIn
-                    </Button>
-                  </a>
+                  {data.canal === "linkedin" && (
+                    <a href={data.linkedin_link} target="_blank" rel="noreferrer" className="flex-1" onClick={() => copy(draft)}>
+                      <Button data-testid="sheet-btn-linkedin" className="w-full bg-[#0A66C2] hover:bg-[#004182] text-white rounded-sm h-9">
+                        <LinkedinLogo size={16} weight="fill" className="mr-2" /> LinkedIn
+                      </Button>
+                    </a>
+                  )}
+                  {data.canal === "email" && (
+                    <div data-testid="sheet-canal-email-note" className="flex-1 flex items-center gap-2 text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-sm px-3 py-2">
+                      <EnvelopeSimple size={15} className="shrink-0 text-slate-700" />
+                      Séquence email — envois gérés automatiquement par le pilote automatique.
+                    </div>
+                  )}
                 </div>
               </div>
 

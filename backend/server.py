@@ -23,7 +23,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from prospection import (
     DEFAULT_SCENARIOS, PROFIL_LABELS, PROFILS, STATUT_LABELS,
-    advance_updates, determine_profil, render_message,
+    advance_updates, determine_canal, determine_profil, render_message,
 )
 from scraper_core import (
     METIERS, USER_AGENT, as_str, audit_site, build_linkedin_link, build_wa_link,
@@ -109,7 +109,6 @@ class SettingsUpdate(BaseModel):
 class EtapeModel(BaseModel):
     etape: int
     delai_jours: int
-    canal: str
     template: str
     objet: str = ""
 
@@ -179,6 +178,7 @@ def prepare_new_prospect(data: dict) -> dict:
     if not p["niveau_conversion"]:
         p["niveau_conversion"] = niveau_from_score(p["score_conversion"])
     p["profil"] = as_str(data.get("profil")) or determine_profil(p)
+    p["canal_contact"] = determine_canal(p)
     p["entreprise_norm"] = normalize_company_name(p["entreprise"])
     p["tel_digits"] = phone_digits(p["telephone"])
     return p
@@ -201,13 +201,14 @@ async def build_queue_item(p: dict, settings: dict) -> dict:
     scenario = await get_scenario(p.get("profil", "site_moyen"))
     etapes = scenario.get("etapes", [])
     idx = min(max(int(p.get("etape_relance", 1)) - 1, 0), len(etapes) - 1) if etapes else 0
-    step = etapes[idx] if etapes else {"etape": 1, "canal": "whatsapp", "template": "", "delai_jours": 0}
+    step = etapes[idx] if etapes else {"etape": 1, "template": "", "delai_jours": 0}
     message = as_str(p.get("message_personnalise")) or render_message(step.get("template", ""), p, settings)
+    canal = p.get("canal_contact") or determine_canal(p) or "whatsapp"
     return {
         "prospect": p,
         "etape": step.get("etape", 1),
         "total_etapes": len(etapes),
-        "canal": step.get("canal", "whatsapp"),
+        "canal": canal,
         "message": message,
         "wa_link": build_wa_link(p.get("telephone", ""), message),
         "linkedin_link": build_linkedin_link(p.get("linkedin_url", ""), p.get("entreprise", ""), p.get("ville", "")),
@@ -225,7 +226,8 @@ async def root():
 async def dashboard_stats():
     total = await db.prospects.count_documents({})
     file_du_jour = await db.prospects.count_documents(
-        {"statut": "a_contacter", "date_prochaine_action": {"$lte": now_iso()}})
+        {"statut": "a_contacter", "date_prochaine_action": {"$lte": now_iso()},
+         "canal_contact": {"$in": ["whatsapp", "linkedin"]}})
     envoyes_auj = await db.prospects.count_documents(
         {"historique": {"$elemMatch": {"type": "envoye", "date": {"$gte": today_start_iso()}}}})
     repondus = await db.prospects.count_documents({"statut": {"$in": ["repondu", "rdv", "gagne"]}})
@@ -246,9 +248,14 @@ async def dashboard_stats():
 
 @api_router.get("/queue")
 async def get_queue(limit: int = 50):
+    """File du jour : actions manuelles uniquement (WhatsApp / LinkedIn).
+
+    Les prospects au canal email sont gérés par le pilote automatique.
+    """
     settings = await get_settings()
     cursor = db.prospects.find(
-        {"statut": "a_contacter", "date_prochaine_action": {"$lte": now_iso()}},
+        {"statut": "a_contacter", "date_prochaine_action": {"$lte": now_iso()},
+         "canal_contact": {"$in": ["whatsapp", "linkedin"]}},
         {"_id": 0},
     ).sort("score_conversion", -1).limit(limit)
     items = []
@@ -288,7 +295,7 @@ async def get_prospect(prospect_id: str):
     settings = await get_settings()
     item = await build_queue_item(p, settings)
     scenario = await get_scenario(p.get("profil", "site_moyen"))
-    apercu = [{"etape": e["etape"], "canal": e["canal"], "delai_jours": e["delai_jours"],
+    apercu = [{"etape": e["etape"], "canal": item["canal"], "delai_jours": e["delai_jours"],
                "message": render_message(e["template"], p, settings)} for e in scenario.get("etapes", [])]
     item["sequence"] = apercu
     return item
@@ -304,6 +311,14 @@ async def update_prospect(prospect_id: str, body: ProspectUpdate):
         updates["tel_digits"] = phone_digits(updates["telephone"])
     if "statut" in updates and updates["statut"] == "a_contacter":
         updates["date_prochaine_action"] = now_iso()
+    if {"telephone", "email", "linkedin_url"} & set(updates):
+        p = await db.prospects.find_one({"id": prospect_id}, {"_id": 0})
+        if not p:
+            raise HTTPException(404, "Prospect introuvable")
+        deja_contacte = any(h.get("type") in ("envoye", "email_envoye")
+                            for h in p.get("historique", []))
+        if not deja_contacte:  # le canal est figé dès le premier envoi de la séquence
+            updates["canal_contact"] = determine_canal({**p, **updates})
     res = await db.prospects.update_one({"id": prospect_id}, {"$set": updates})
     if not res.matched_count:
         raise HTTPException(404, "Prospect introuvable")
@@ -413,7 +428,7 @@ async def import_file(file: UploadFile = File(...)):
     if "entreprise" not in mapping.values():
         raise HTTPException(400, "Colonne 'entreprise' (ou 'nom') introuvable dans le fichier.")
 
-    importes, doublons, erreurs = 0, 0, 0
+    importes, doublons, erreurs, sans_contact = 0, 0, 0, 0
     for _, row in df.iterrows():
         data = {}
         for col, target in mapping.items():
@@ -424,6 +439,9 @@ async def import_file(file: UploadFile = File(...)):
             continue
         data["site_web"] = resolve_site_web(data.get("site_web", "")) if as_str(data.get("site_web")) else ""
         p = prepare_new_prospect(data)
+        if not p["canal_contact"]:
+            sans_contact += 1
+            continue
         if await find_duplicate(p):
             doublons += 1
             continue
@@ -431,7 +449,7 @@ async def import_file(file: UploadFile = File(...)):
         importes += 1
 
     return {"importes": importes, "doublons": doublons, "erreurs": erreurs,
-            "colonnes_reconnues": list(mapping.values())}
+            "sans_contact": sans_contact, "colonnes_reconnues": list(mapping.values())}
 
 
 # ============================================================ Scraper (jobs en arrière-plan)
@@ -466,12 +484,12 @@ async def run_scrape_job(job_id: str, params: ScrapeRequest):
                 return
 
             sem = asyncio.Semaphore(4)
-            ajoutes, doublons = 0, 0
+            ajoutes, doublons, sans_contact = 0, 0, 0
             traites = 0
             lock = asyncio.Lock()
 
             async def process(item: dict):
-                nonlocal ajoutes, doublons, traites
+                nonlocal ajoutes, doublons, sans_contact, traites
                 async with sem:
                     try:
                         if serper_key and not has_real_website(item.get("site_web", "")):
@@ -485,7 +503,9 @@ async def run_scrape_job(job_id: str, params: ScrapeRequest):
                             item.update(audit)
                         p = prepare_new_prospect(item)
                         async with lock:
-                            if await find_duplicate(p):
+                            if not p["canal_contact"]:
+                                sans_contact += 1  # ni email, ni téléphone, ni LinkedIn → ignoré
+                            elif await find_duplicate(p):
                                 doublons += 1
                             else:
                                 await db.prospects.insert_one(p)
@@ -496,12 +516,16 @@ async def run_scrape_job(job_id: str, params: ScrapeRequest):
                         traites += 1
                         pct = 15 + int(traites / len(items) * 80)
                         await db.jobs.update_one({"id": job_id}, {"$set": {
-                            "progress": pct, "traites": traites, "ajoutes": ajoutes, "doublons": doublons}})
+                            "progress": pct, "traites": traites, "ajoutes": ajoutes,
+                            "doublons": doublons, "sans_contact": sans_contact}})
 
             await _job_log(job_id, "Enrichissement + audit des sites…", statut="audit")
             await asyncio.gather(*[process(i) for i in items])
-            await _job_log(job_id, f"Terminé : {ajoutes} prospects ajoutés, {doublons} doublons ignorés.",
-                           statut="termine", progress=100, ajoutes=ajoutes, doublons=doublons)
+            await _job_log(job_id,
+                           f"Terminé : {ajoutes} prospects ajoutés, {doublons} doublons ignorés, "
+                           f"{sans_contact} sans aucun contact (email/tél/LinkedIn) écartés.",
+                           statut="termine", progress=100, ajoutes=ajoutes,
+                           doublons=doublons, sans_contact=sans_contact)
     except Exception as e:
         logger.exception("Job scraping en erreur")
         await _job_log(job_id, f"Erreur : {e}", statut="erreur")
@@ -511,7 +535,7 @@ async def run_scrape_job(job_id: str, params: ScrapeRequest):
 async def start_scrape(params: ScrapeRequest):
     job = {"id": str(uuid.uuid4()), "params": params.model_dump(), "statut": "demarre",
            "progress": 0, "total": 0, "traites": 0, "ajoutes": 0, "doublons": 0,
-           "logs": [], "created_at": now_iso()}
+           "sans_contact": 0, "logs": [], "created_at": now_iso()}
     await db.jobs.insert_one({**job})
     asyncio.create_task(run_scrape_job(job["id"], params))
     return {k: v for k, v in job.items() if k != "_id"}
@@ -675,7 +699,7 @@ EXPORT_COLS = [
     ("entreprise", "Entreprise"), ("metier", "Métier"), ("ville", "Ville"),
     ("code_postal", "Code postal"), ("adresse", "Adresse"), ("siren", "SIREN"),
     ("telephone", "Téléphone"), ("email", "Email"), ("site_web", "Site web"),
-    ("linkedin_url", "LinkedIn"), ("note_site", "Note site (/100)"),
+    ("linkedin_url", "LinkedIn"), ("canal_contact", "Canal"), ("note_site", "Note site (/100)"),
     ("qualite_site", "Qualité site"), ("score_conversion", "Score conversion (/100)"),
     ("niveau_conversion", "Niveau"), ("profil", "Profil"), ("statut", "Statut"),
     ("etape_relance", "Étape relance"), ("signal_principal", "Signal principal"),
@@ -822,12 +846,40 @@ app.add_middleware(
 )
 
 
+async def migrate_canal_unique():
+    """Migration one-shot : canal unique par prospect (email > whatsapp > linkedin).
+
+    - Remplace les scénarios par les nouveaux templates neutres (sans canal par étape).
+    - Supprime les prospects sans aucun moyen de contact.
+    - Affecte canal_contact à tous les prospects restants.
+    """
+    s = await db.settings.find_one({"_id": "global"}) or {}
+    if s.get("migration_canal_unique"):
+        return
+    for profil, sc in DEFAULT_SCENARIOS.items():
+        await db.scenarios.replace_one({"profil": profil}, {**sc}, upsert=True)
+    vide = {"$not": {"$regex": r"\S"}}
+    res = await db.prospects.delete_many(
+        {"email": vide, "telephone": vide, "linkedin_url": vide})
+    await db.prospects.update_many(
+        {"email": {"$regex": r"\S"}}, {"$set": {"canal_contact": "email"}})
+    await db.prospects.update_many(
+        {"email": vide, "telephone": {"$regex": r"\S"}}, {"$set": {"canal_contact": "whatsapp"}})
+    await db.prospects.update_many(
+        {"email": vide, "telephone": vide, "linkedin_url": {"$regex": r"\S"}},
+        {"$set": {"canal_contact": "linkedin"}})
+    await db.settings.update_one(
+        {"_id": "global"}, {"$set": {"migration_canal_unique": True}}, upsert=True)
+    logger.info(f"Migration canal unique : {res.deleted_count} prospect(s) sans contact supprimé(s)")
+
+
 @app.on_event("startup")
 async def seed():
     for profil, sc in DEFAULT_SCENARIOS.items():
         existing = await db.scenarios.find_one({"profil": profil})
         if not existing:
             await db.scenarios.insert_one({**sc})
+    await migrate_canal_unique()
     if not await db.settings.find_one({"_id": "global"}):
         await db.settings.insert_one({"_id": "global", "prenom_expediteur": "Simon",
                                       "lien_rdv": "", "serper_api_key": ""})

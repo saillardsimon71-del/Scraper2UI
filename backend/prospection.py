@@ -1,4 +1,4 @@
-"""Scénarios de relance, détermination du profil et rendu des messages."""
+"""Scénarios de relance, détermination du profil/canal et rendu des messages."""
 from __future__ import annotations
 
 import re
@@ -15,22 +15,44 @@ PROFIL_LABELS = {
     "site_moyen": "Site moyen",
 }
 
+CANAL_LABELS = {"email": "Email", "whatsapp": "WhatsApp", "linkedin": "LinkedIn"}
+
+
+def determine_canal(p: dict) -> str:
+    """Canal unique de toute la séquence, par priorité : email > whatsapp > linkedin.
+
+    Retourne "" si le prospect n'a aucun moyen de contact (à supprimer / ne pas ajouter).
+    """
+    if as_str(p.get("email")):
+        return "email"
+    if as_str(p.get("telephone")):
+        return "whatsapp"
+    if as_str(p.get("linkedin_url")):
+        return "linkedin"
+    return ""
+
+
 # delai_jours = jours d'attente APRÈS l'étape précédente (étape 1 : immédiat)
+# Les templates sont neutres : le même message part sur le canal du prospect
+# (email, WhatsApp ou LinkedIn). L'objet n'est utilisé que pour le canal email.
 DEFAULT_SCENARIOS = {
     "pas_de_site": {
         "profil": "pas_de_site",
         "label": "Pas de site",
         "description": "Prospect sans aucun site web — le besoin est maximal.",
         "etapes": [
-            {"etape": 1, "delai_jours": 0, "canal": "whatsapp",
+            {"etape": 1, "delai_jours": 0,
+             "objet": "Un site pour {entreprise} ?",
              "template": "Bonjour, je suis {prenom_exp}, je travaille dans le web. Je cherchais le site de {entreprise} pour voir vos réalisations, mais je n'ai rien trouvé en ligne. Vous avez une page quelque part ?"},
-            {"etape": 2, "delai_jours": 3, "canal": "linkedin",
-             "template": "Bonjour, {prenom_exp}, spécialiste web. Je n'ai pas trouvé de site pour {entreprise} — aujourd'hui 8 clients sur 10 cherchent leur {metier} sur Google avant d'appeler. Je peux vous montrer en 2 min ce que ça donnerait pour vous ?"},
-            {"etape": 3, "delai_jours": 4, "canal": "whatsapp",
-             "template": "Bonjour, c'est encore {prenom_exp}. Dernière relance promis : j'ai préparé une idée de site pour {entreprise}, simple et efficace pour récupérer des demandes de devis. Je vous l'envoie ? {lien_rdv}"},
-            {"etape": 4, "delai_jours": 3, "canal": "email",
-             "objet": "Un site pour {entreprise} ? Quelques idées concrètes",
-             "template": "Bonjour,\n\nJe me permets un dernier message, par écrit cette fois : je suis {prenom_exp}, spécialiste web, et je n'ai trouvé aucun site pour {entreprise}.\n\nAujourd'hui, 8 clients sur 10 cherchent leur {metier} sur Google avant d'appeler. Un site simple — vos réalisations, vos avis clients, un formulaire de devis — peut faire une vraie différence sur vos demandes entrantes.\n\nSi vous voulez voir ce que ça donnerait pour vous, on peut en parler 15 minutes : {lien_rdv}\n\nBonne journée,\n{prenom_exp}"},
+            {"etape": 2, "delai_jours": 3,
+             "objet": "8 clients sur 10 cherchent leur {metier} sur Google",
+             "template": "Bonjour, c'est {prenom_exp}, spécialiste web. Je reviens vers vous : je n'ai pas trouvé de site pour {entreprise} — aujourd'hui 8 clients sur 10 cherchent leur {metier} sur Google avant d'appeler. Je peux vous montrer en 2 min ce que ça donnerait pour vous ?"},
+            {"etape": 3, "delai_jours": 4,
+             "objet": "Une idée de site pour {entreprise}",
+             "template": "Bonjour, c'est encore {prenom_exp}. J'ai préparé une idée de site pour {entreprise}, simple et efficace pour récupérer des demandes de devis. Je vous l'envoie ? {lien_rdv}"},
+            {"etape": 4, "delai_jours": 3,
+             "objet": "Dernier message — un site pour {entreprise}",
+             "template": "Bonjour,\n\nDernier message de ma part, promis : je suis {prenom_exp}, spécialiste web, et je n'ai trouvé aucun site pour {entreprise}.\n\nAujourd'hui, 8 clients sur 10 cherchent leur {metier} sur Google avant d'appeler. Un site simple — vos réalisations, vos avis clients, un formulaire de devis — peut faire une vraie différence sur vos demandes entrantes.\n\nSi vous voulez voir ce que ça donnerait pour vous, on peut en parler 15 minutes : {lien_rdv}\n\nBonne journée,\n{prenom_exp}"},
         ],
     },
     "site_ancien": {
@@ -38,15 +60,18 @@ DEFAULT_SCENARIOS = {
         "label": "Site ancien",
         "description": "Site existant mais obsolète (note < 50/100).",
         "etapes": [
-            {"etape": 1, "delai_jours": 0, "canal": "whatsapp",
-             "template": "Bonjour, je suis {prenom_exp}. Je suis passé sur {site_web} — beau métier ! Par contre le site mériterait un coup de jeune ({signal}). Ça vous dirait qu'on en parle 2 minutes ?"},
-            {"etape": 2, "delai_jours": 3, "canal": "linkedin",
-             "template": "Bonjour, {prenom_exp}, spécialiste web. J'ai analysé le site de {entreprise} : note {note_site}/100. Quelques améliorations simples pourraient vous amener nettement plus de demandes de devis. Je vous envoie le détail ?"},
-            {"etape": 3, "delai_jours": 4, "canal": "whatsapp",
-             "template": "Bonjour, {prenom_exp} à nouveau. Dernier message : j'ai noté 2-3 améliorations concrètes pour {site_web} qui pourraient augmenter vos appels entrants. Ça vous intéresse ? {lien_rdv}"},
-            {"etape": 4, "delai_jours": 3, "canal": "email",
-             "objet": "Quelques pistes concrètes pour le site de {entreprise}",
-             "template": "Bonjour,\n\nJe suis {prenom_exp}, spécialiste web. J'ai analysé {site_web} et je vous écris par email pour vous laisser une trace écrite : {signal}.\n\nQuelques améliorations simples pourraient vous amener nettement plus de demandes de devis — être mieux trouvé sur Google, faciliter l'appel depuis un téléphone, rassurer avec vos réalisations.\n\nSi ça vous intéresse, je vous montre tout en 15 minutes : {lien_rdv}\n\nBonne journée,\n{prenom_exp}"},
+            {"etape": 1, "delai_jours": 0,
+             "objet": "Le site de {entreprise} mérite un coup de jeune",
+             "template": "Bonjour, je suis {prenom_exp}, spécialiste web. Je suis passé sur {site_web} — beau métier ! Par contre le site mériterait un coup de jeune ({signal}). Ça vous dirait qu'on en parle 2 minutes ?"},
+            {"etape": 2, "delai_jours": 3,
+             "objet": "Le site de {entreprise} : note {note_site}/100",
+             "template": "Bonjour, c'est {prenom_exp}, spécialiste web. J'ai analysé le site de {entreprise} : note {note_site}/100. Quelques améliorations simples pourraient vous amener nettement plus de demandes de devis. Je vous envoie le détail ?"},
+            {"etape": 3, "delai_jours": 4,
+             "objet": "2-3 améliorations concrètes pour {site_web}",
+             "template": "Bonjour, {prenom_exp} à nouveau. J'ai noté 2-3 améliorations concrètes pour {site_web} qui pourraient augmenter vos appels entrants. Ça vous intéresse ? {lien_rdv}"},
+            {"etape": 4, "delai_jours": 3,
+             "objet": "Dernier message — les pistes pour {entreprise}",
+             "template": "Bonjour,\n\nDernier message de ma part : je suis {prenom_exp}, spécialiste web. J'ai analysé {site_web} et voici l'essentiel : {signal}.\n\nQuelques améliorations simples pourraient vous amener nettement plus de demandes de devis — être mieux trouvé sur Google, faciliter l'appel depuis un téléphone, rassurer avec vos réalisations.\n\nSi ça vous intéresse, je vous montre tout en 15 minutes : {lien_rdv}\n\nBonne journée,\n{prenom_exp}"},
         ],
     },
     "signal_chaud": {
@@ -54,15 +79,18 @@ DEFAULT_SCENARIOS = {
         "label": "Signal chaud",
         "description": "Fort signal d'achat détecté (score ≥ 80) — séquence rapide.",
         "etapes": [
-            {"etape": 1, "delai_jours": 0, "canal": "whatsapp",
+            {"etape": 1, "delai_jours": 0,
+             "objet": "{entreprise} : {signal}",
              "template": "Bonjour, je suis {prenom_exp}, spécialiste web. En regardant {entreprise} j'ai remarqué : {signal}. C'est exactement le genre de situation où une présence web optimisée fait la différence sur les devis. On échange 2 minutes ?"},
-            {"etape": 2, "delai_jours": 2, "canal": "linkedin",
-             "template": "Bonjour, {prenom_exp} ici. Je vous ai écrit sur WhatsApp au sujet de {entreprise} ({signal}). J'ai déjà quelques pistes concrètes — dispo pour un appel rapide cette semaine ? {lien_rdv}"},
-            {"etape": 3, "delai_jours": 3, "canal": "whatsapp",
-             "template": "Bonjour, dernier message de ma part. L'opportunité est réelle pour {entreprise} : {signal}. Si le timing est mauvais, dites-le moi simplement et je ne vous relancerai plus. Bonne journée !"},
-            {"etape": 4, "delai_jours": 2, "canal": "email",
-             "objet": "{entreprise} : les pistes dont je vous parlais",
-             "template": "Bonjour,\n\n{prenom_exp} ici, spécialiste web. Je vous ai contacté récemment au sujet de {entreprise} : {signal}.\n\nC'est exactement le genre de moment où une présence web optimisée fait la différence sur les devis. J'ai déjà quelques pistes concrètes à vous montrer.\n\nUn créneau de 15 minutes cette semaine ? {lien_rdv}\n\nBonne journée,\n{prenom_exp}"},
+            {"etape": 2, "delai_jours": 2,
+             "objet": "Les pistes concrètes pour {entreprise}",
+             "template": "Bonjour, {prenom_exp} ici. Je reviens vers vous au sujet de {entreprise} ({signal}). J'ai déjà quelques pistes concrètes — dispo pour un appel rapide cette semaine ? {lien_rdv}"},
+            {"etape": 3, "delai_jours": 3,
+             "objet": "On en reste là pour {entreprise} ?",
+             "template": "Bonjour, c'est encore {prenom_exp}. L'opportunité est réelle pour {entreprise} : {signal}. Si le timing est mauvais, dites-le moi simplement et je ne vous relancerai plus. Sinon, 15 minutes suffisent : {lien_rdv}"},
+            {"etape": 4, "delai_jours": 2,
+             "objet": "Dernier message — {entreprise}",
+             "template": "Bonjour,\n\nDernier message de ma part. Je vous ai contacté récemment au sujet de {entreprise} : {signal}.\n\nC'est exactement le genre de moment où une présence web optimisée fait la différence sur les devis. J'ai déjà quelques pistes concrètes à vous montrer.\n\nUn créneau de 15 minutes cette semaine ? {lien_rdv}\n\nBonne journée,\n{prenom_exp}"},
         ],
     },
     "site_moyen": {
@@ -70,15 +98,18 @@ DEFAULT_SCENARIOS = {
         "label": "Site moyen",
         "description": "Site correct mais perfectible (note 50-79/100).",
         "etapes": [
-            {"etape": 1, "delai_jours": 0, "canal": "whatsapp",
+            {"etape": 1, "delai_jours": 0,
+             "objet": "Votre site {site_web} a du potentiel",
              "template": "Bonjour, je suis {prenom_exp}, spécialiste web. J'ai vu votre site {site_web}, il a du potentiel mais quelques points pourraient être améliorés pour attirer plus de clients ({signal}). Vous êtes ouvert à un échange rapide ?"},
-            {"etape": 2, "delai_jours": 4, "canal": "linkedin",
+            {"etape": 2, "delai_jours": 4,
+             "objet": "Audit du site de {entreprise} : note {note_site}/100",
              "template": "Bonjour, {prenom_exp}. J'ai audité le site de {entreprise} (note {note_site}/100) : il y a des gains rapides possibles côté visibilité Google et conversion. Je partage l'audit complet si ça vous intéresse."},
-            {"etape": 3, "delai_jours": 4, "canal": "whatsapp",
-             "template": "Bonjour, {prenom_exp} à nouveau. Je clos mon suivi sur {entreprise} — si améliorer {site_web} devient une priorité, je reste disponible. {lien_rdv}"},
-            {"etape": 4, "delai_jours": 3, "canal": "email",
-             "objet": "Audit de {site_web} : les gains rapides pour {entreprise}",
-             "template": "Bonjour,\n\nJe suis {prenom_exp}, spécialiste web. J'ai audité le site de {entreprise} ({site_web}) : il a du potentiel, et quelques gains rapides sont possibles côté visibilité Google et demandes de devis.\n\nJe vous partage volontiers le détail de l'audit — c'est gratuit et sans engagement.\n\nOn en parle 15 minutes ? {lien_rdv}\n\nBonne journée,\n{prenom_exp}"},
+            {"etape": 3, "delai_jours": 4,
+             "objet": "Les gains rapides pour {site_web}",
+             "template": "Bonjour, {prenom_exp} à nouveau. J'ai identifié des gains rapides pour {site_web} côté visibilité Google et demandes de devis. Je vous partage le détail — gratuit, sans engagement. {lien_rdv}"},
+            {"etape": 4, "delai_jours": 3,
+             "objet": "Dernier message — l'audit de {site_web}",
+             "template": "Bonjour,\n\nDernier message de ma part : je suis {prenom_exp}, spécialiste web. J'ai audité le site de {entreprise} ({site_web}) : il a du potentiel, et quelques gains rapides sont possibles côté visibilité Google et demandes de devis.\n\nJe vous partage volontiers le détail de l'audit — c'est gratuit et sans engagement.\n\nOn en parle 15 minutes ? {lien_rdv}\n\nBonne journée,\n{prenom_exp}"},
         ],
     },
 }

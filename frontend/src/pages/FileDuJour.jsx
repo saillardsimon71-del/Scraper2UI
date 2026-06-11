@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import {
   WhatsappLogo,
   LinkedinLogo,
-  EnvelopeSimple,
   CheckCircle,
   ArrowBendUpRight,
   Eye,
@@ -75,25 +74,6 @@ export default function FileDuJour() {
     window.open(item.linkedin_link, "_blank");
   };
 
-  const sendEmail = async (item) => {
-    const p = item.prospect;
-    if (!p.email) {
-      toast.error("Pas d'adresse email pour ce prospect");
-      return;
-    }
-    try {
-      await api.post("/email/send", { prospect_id: p.id, subject: item.objet, message: item.message });
-      toast.success(`Email envoyé à ${p.email} — pensez à « Marquer envoyé »`);
-    } catch (e) {
-      if (e.response?.data?.detail === "SENDGRID_NON_CONFIGURE") {
-        window.open(`mailto:${p.email}?subject=${encodeURIComponent(item.objet)}&body=${encodeURIComponent(item.message)}`);
-        toast.info("SendGrid non configuré — ouverture de votre client mail (clé dans Paramètres)");
-      } else {
-        toast.error(e.response?.data?.detail || "Envoi email impossible");
-      }
-    }
-  };
-
   return (
     <div className="p-8 fade-up">
       <div className="flex items-end justify-between mb-8">
@@ -101,7 +81,7 @@ export default function FileDuJour() {
           <h1 className="text-4xl tracking-tighter font-bold text-[#111111]">File du jour</h1>
           <p className="text-sm text-slate-500 mt-1">
             {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })} —
-            prospects triés par score de conversion. Un clic, le message est prêt.
+            actions manuelles WhatsApp & LinkedIn, triées par score. Les prospects avec email sont gérés par le pilote automatique.
           </p>
         </div>
       </div>
@@ -164,37 +144,29 @@ export default function FileDuJour() {
                       <div className="text-xs text-slate-400 mt-1 line-clamp-1 italic">“{item.message}”</div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {item.canal === "email" && (
+                      {item.canal === "whatsapp" && (
                         <Button
-                          data-testid="btn-email-send"
+                          data-testid="btn-whatsapp-send"
                           size="sm"
-                          className="bg-[#111111] hover:bg-slate-800 text-white rounded-sm h-8"
-                          onClick={() => sendEmail(item)}
-                          disabled={!p.email}
-                          title={p.email ? `Envoyer l'email à ${p.email}` : "Pas d'email"}
+                          className="bg-[#25D366] hover:bg-[#1DA851] text-white rounded-sm h-8"
+                          onClick={() => openWhatsApp(item)}
+                          disabled={!item.wa_link}
+                          title={item.wa_link ? "Ouvrir WhatsApp avec le message pré-rempli" : "Pas de téléphone"}
                         >
-                          <EnvelopeSimple size={16} weight="fill" />
+                          <WhatsappLogo size={16} weight="fill" />
                         </Button>
                       )}
-                      <Button
-                        data-testid="btn-whatsapp-send"
-                        size="sm"
-                        className="bg-[#25D366] hover:bg-[#1DA851] text-white rounded-sm h-8"
-                        onClick={() => openWhatsApp(item)}
-                        disabled={!item.wa_link}
-                        title={item.wa_link ? "Ouvrir WhatsApp avec le message pré-rempli" : "Pas de téléphone"}
-                      >
-                        <WhatsappLogo size={16} weight="fill" />
-                      </Button>
-                      <Button
-                        data-testid="btn-linkedin-open"
-                        size="sm"
-                        className="bg-[#0A66C2] hover:bg-[#004182] text-white rounded-sm h-8"
-                        onClick={() => openLinkedIn(item)}
-                        title="Copier le message + ouvrir LinkedIn"
-                      >
-                        <LinkedinLogo size={16} weight="fill" />
-                      </Button>
+                      {item.canal === "linkedin" && (
+                        <Button
+                          data-testid="btn-linkedin-open"
+                          size="sm"
+                          className="bg-[#0A66C2] hover:bg-[#004182] text-white rounded-sm h-8"
+                          onClick={() => openLinkedIn(item)}
+                          title="Copier le message + ouvrir LinkedIn"
+                        >
+                          <LinkedinLogo size={16} weight="fill" />
+                        </Button>
+                      )}
                       <Button
                         data-testid="btn-mark-sent"
                         size="sm"

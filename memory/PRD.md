@@ -53,7 +53,19 @@ Porter le repo GitHub `saillardsimon71-del/Scraper2UI` (outil Python de prospect
 - Tests e2e validés : 401 mauvais token, réponse intéressée → repondu, STOP → opt_out, bounce → email_invalide ; nettoyage fait
 - ⚠️ Action utilisateur requise : configurer chez SendGrid l'Inbound Parse + l'Event Webhook avec les URLs affichées dans Paramètres, et créer l'enregistrement DNS MX du sous-domaine de réponse
 
+## Implémenté — Itération 5 (11/06/2026) : Canal unique par prospect (priorité Email > WhatsApp > LinkedIn), testé e2e
+- `determine_canal()` dans prospection.py : à la création (scraping/import), canal fixé par priorité — email → "email", sinon téléphone → "whatsapp", sinon linkedin_url → "linkedin", sinon prospect NON ajouté (compteur "sans_contact" affiché dans Scraper + Import)
+- Toute la séquence (étape 1 → dernière relance) reste sur le même canal ; plus de canal par étape (champ `canal` retiré d'EtapeModel et des scénarios)
+- Templates des 4 profils réécrits en neutres (aucune référence au canal) + objet d'email à chaque étape (utilisé seulement si canal email)
+- Pilote automatique : gère désormais TOUTE la séquence des prospects `canal_contact: "email"` (requête sur le prospect, plus sur l'étape)
+- File du jour (`/api/queue` + dashboard file_du_jour) : uniquement canaux whatsapp/linkedin (les emails sont 100% autopilot) ; un seul bouton d'action par ligne selon le canal
+- PATCH prospect : canal recalculé si email/téléphone/linkedin modifiés ET séquence pas encore démarrée ; figé dès le premier envoi
+- Migration one-shot au démarrage (flag settings.migration_canal_unique) : scénarios remplacés, 3 prospects sans contact supprimés, canal_contact affecté à tous
+- Frontend : Scenarios.jsx (bandeau explicatif, plus de sélecteur de canal, objet toujours visible), FileDuJour.jsx (bouton unique par canal, envoi email manuel retiré), ProspectSheet.jsx (boutons selon canal, note "géré par le pilote" si email), AutopilotCard texte mis à jour, export Excel colonne "Canal"
+- Tests e2e curl : priorité email>wa>li ✓, sans contact ignoré ✓, queue filtrée ✓, autopilot en_attente ✓, recalcul/figeage du canal ✓ ; UI Séquences vérifiée par screenshot
+
 ## Backlog priorisé
+- P1 : digest quotidien par email (résumé du soir : envois, réponses, intéressés)
 - P2 : sync Google Sheets ; PDF audit ; rate limiting IA ; redaction clés API dans GET /settings
 - P2 : fallback non-drag&drop sur kanban (sélecteur de statut sur carte)
 - P2 : warnings a11y DialogTitle/Description ; découpage de server.py en modules ; debounce sur input quota autopilot

@@ -142,8 +142,8 @@ export default function Scraper() {
               <div className="h-2 bg-slate-100 w-full mb-4">
                 <div className="h-2 bg-[#002FA7] transition-all duration-500" style={{ width: `${job.progress}%` }} />
               </div>
-              <div className="grid grid-cols-4 gap-3 mb-4 text-center">
-                {[["Découverts", job.total], ["Traités", job.traites], ["Ajoutés", job.ajoutes], ["Doublons", job.doublons]].map(([l, v]) => (
+              <div className="grid grid-cols-5 gap-3 mb-4 text-center">
+                {[["Découverts", job.total], ["Traités", job.traites], ["Ajoutés", job.ajoutes], ["Doublons", job.doublons], ["Sans contact", job.sans_contact ?? 0]].map(([l, v]) => (
                   <div key={l} className="border border-slate-200 py-2 rounded-sm">
                     <div className="font-mono font-semibold tabular-nums">{v}</div>
                     <div className="text-[10px] uppercase text-slate-400">{l}</div>
@@ -178,7 +178,7 @@ export default function Scraper() {
                       <span className={`text-xs font-semibold ${j.statut === "termine" ? "text-emerald-600" : j.statut === "erreur" ? "text-red-500" : "text-[#002FA7]"}`}>
                         {j.statut}
                       </span>
-                      <div className="text-xs text-slate-500 tabular-nums">{j.ajoutes} ajoutés · {j.doublons} doublons</div>
+                      <div className="text-xs text-slate-500 tabular-nums">{j.ajoutes} ajoutés · {j.doublons} doublons{j.sans_contact ? ` · ${j.sans_contact} sans contact` : ""}</div>
                     </div>
                   </li>
                 ))}

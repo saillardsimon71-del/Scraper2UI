@@ -1,7 +1,9 @@
 """Pilote automatique d'envoi d'emails — porté du campaign_manager du scraper de base.
 
 Boucle de fond : toutes les 5 minutes, envoie automatiquement les emails des
-prospects dus dont l'étape courante de séquence est de canal "email".
+prospects dus dont le canal de contact est "email" (canal unique pour toute la
+séquence : ces prospects sont gérés à 100 % par le pilote, de l'étape 1 à la
+dernière relance).
 Respecte : quota journalier, plage horaire (Europe/Paris), jours ouvrés,
 arrêt si répondu / opt-out (géré par le statut du pipeline).
 """
@@ -72,10 +74,11 @@ async def count_sent_today(db) -> int:
 
 
 async def eligible_prospects(db) -> list[tuple[dict, dict, list]]:
-    """Prospects dus dont l'étape courante est un email et qui ont une adresse."""
+    """Prospects dus dont le canal de séquence est l'email (toutes les étapes)."""
     out = []
     cursor = db.prospects.find(
         {"statut": "a_contacter", "date_prochaine_action": {"$lte": now_iso()},
+         "canal_contact": "email",
          "email": {"$exists": True, "$nin": ["", None]},
          "email_invalide": {"$ne": True}},
         {"_id": 0},
@@ -87,8 +90,6 @@ async def eligible_prospects(db) -> list[tuple[dict, dict, list]]:
             continue
         idx = min(max(int(p.get("etape_relance", 1)) - 1, 0), len(etapes) - 1)
         step = etapes[idx]
-        if step.get("canal") != "email":
-            continue
         out.append((p, step, etapes))
     return out
 

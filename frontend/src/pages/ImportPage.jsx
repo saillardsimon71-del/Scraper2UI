@@ -65,8 +65,8 @@ export default function ImportPage() {
           <div className="flex items-center gap-2 text-emerald-700 font-semibold mb-3">
             <CheckCircle size={18} weight="fill" /> Import terminé
           </div>
-          <div className="grid grid-cols-3 gap-4 text-center mb-4">
-            {[["Importés", result.importes, "text-emerald-600"], ["Doublons ignorés", result.doublons, "text-amber-600"], ["Erreurs", result.erreurs, "text-red-500"]].map(([l, v, c]) => (
+          <div className="grid grid-cols-4 gap-4 text-center mb-4">
+            {[["Importés", result.importes, "text-emerald-600"], ["Doublons ignorés", result.doublons, "text-amber-600"], ["Sans contact", result.sans_contact ?? 0, "text-slate-500"], ["Erreurs", result.erreurs, "text-red-500"]].map(([l, v, c]) => (
               <div key={l} className="border border-slate-200 py-3 rounded-sm">
                 <div className={`font-heading text-2xl font-bold tabular-nums ${c}`}>{v}</div>
                 <div className="text-[11px] uppercase text-slate-400">{l}</div>
