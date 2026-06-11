@@ -1,0 +1,139 @@
+{
+  "project_context": {
+    "name": "Scraper2UI Prospecting Cockpit",
+    "domain": "Enterprise SaaS / Internal CRM Dashboard",
+    "target_audience": "Sales prospectors targeting French artisans",
+    "theme": "Light",
+    "archetype": "Archetype 4 (Swiss & High-Contrast)"
+  },
+  "design_principles": {
+    "1": "Glanceable, operational dashboard: clear North Star metric with progressive disclosure for deep drill-downs.",
+    "2": "Function over decoration. Monochrome base with pure, functional colors strictly reserved for interaction and status.",
+    "3": "Control Room Grid: High data density, cardless or sharp minimal borders, optimal for fast scanning.",
+    "4": "Every interactive element must support high-velocity sales actions (one-click WhatsApp/LinkedIn)."
+  },
+  "typography": {
+    "strategy": "Swiss brutalist clarity for headers, engineered legibility for dense tables.",
+    "font_family": {
+      "headings": "Cabinet Grotesk, sans-serif",
+      "body": "IBM Plex Sans, sans-serif",
+      "mono": "IBM Plex Mono, monospace"
+    },
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl tracking-tighter font-medium text-slate-950",
+      "h2": "text-2xl sm:text-3xl tracking-tight font-medium text-slate-900",
+      "h3": "text-xl font-medium tracking-tight text-slate-800",
+      "h4": "text-sm uppercase tracking-[0.2em] font-semibold text-slate-500",
+      "body": "text-sm sm:text-base leading-relaxed text-slate-700",
+      "table_data": "text-sm tabular-nums text-slate-700",
+      "caption": "text-xs text-slate-500"
+    }
+  },
+  "colors": {
+    "background": {
+      "page": "bg-[#FAFAFA]",
+      "surface": "bg-white",
+      "surface_hover": "hover:bg-slate-50",
+      "sidebar": "bg-[#111111]"
+    },
+    "text": {
+      "primary": "text-[#111111]",
+      "secondary": "text-[#525252]",
+      "muted": "text-[#737373]",
+      "inverse": "text-white"
+    },
+    "border": {
+      "default": "border-slate-200",
+      "focus": "focus:ring-2 focus:ring-[#002FA7]/50"
+    },
+    "brand": {
+      "primary": "bg-[#002FA7] hover:bg-[#00227A] text-white",
+      "whatsapp": "bg-[#25D366] hover:bg-[#1DA851] text-white",
+      "linkedin": "bg-[#0A66C2] hover:bg-[#004182] text-white",
+      "ai_magic": "bg-[#111111] hover:bg-slate-800 text-white"
+    },
+    "status": {
+      "hot": "bg-amber-100 text-amber-800 border-amber-200",
+      "warm": "bg-orange-100 text-orange-800 border-orange-200",
+      "cold": "bg-blue-50 text-blue-700 border-blue-200",
+      "success": "bg-emerald-100 text-emerald-800 border-emerald-200"
+    }
+  },
+  "layout": {
+    "spacing_scale": "p-2, p-4, p-6, p-8, p-12 (Generous padding on forms, tight padding on tables)",
+    "grid_system": {
+      "dashboard_top": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4",
+      "dashboard_main": "grid grid-cols-1 lg:grid-cols-3 gap-6",
+      "bento_span": "col-span-1 lg:col-span-2"
+    },
+    "alignment": "Left-align all text and tabular data. Center-align empty states only.",
+    "borders_and_radius": "Sharp edges. Use `rounded-none` or max `rounded-sm` for an engineered, precise SaaS look."
+  },
+  "components": {
+    "tables": {
+      "style": "Cardless, full-width. border-b for rows, no vertical borders. hover:bg-slate-50 transition-colors.",
+      "implementation": "Shadcn UI Table, customized with dense padding (py-2 instead of py-4) and tabular-nums."
+    },
+    "drawers": {
+      "style": "Right-side slide-out (Sheet). Backdrop blur bg-black/20. Sharp corners.",
+      "implementation": "Shadcn UI Sheet. Used for deep-dives into prospect site audit (/100) and AI messages."
+    },
+    "buttons": {
+      "style": "Minimal padding, sharp corners (rounded-sm). Always show distinct hover states. Use icons for WhatsApp/LinkedIn actions.",
+      "implementation": "Shadcn UI Button. Variants: default (Brand Blue), outline (Action/Secondary), ghost (Table rows)."
+    },
+    "cards": {
+      "style": "Flat surface. 1px solid border-slate-200. No shadows. Internal padding p-6.",
+      "implementation": "Raw HTML/Tailwind divs with border, bg-white."
+    },
+    "inputs": {
+      "style": "Square inputs, sharp borders. focus:ring-1 focus:ring-slate-950.",
+      "implementation": "Shadcn UI Input, Select, Textarea."
+    }
+  },
+  "interactions_and_motion": {
+    "hover_states": "Crisp and immediate. transition-colors duration-150 ease-out.",
+    "loading": "Use indeterminate horizontal progress bars at the top of cards, or minimal spinner.",
+    "focus_states": "Accessibility first: 2px offset ring, using brand primary color or pure black.",
+    "progress_bar": "For the Scraper page, use a smooth transforming width transition with a monospace percentage counter."
+  },
+  "testing": {
+    "rules": "All interactive elements MUST have a data-testid attribute in kebab-case format reflecting their role.",
+    "examples": [
+      "data-testid=\"nav-file-du-jour\"",
+      "data-testid=\"btn-whatsapp-send\"",
+      "data-testid=\"btn-linkedin-open\"",
+      "data-testid=\"table-prospects-row\"",
+      "data-testid=\"btn-ai-improve-message\"",
+      "data-testid=\"form-scraper-submit\""
+    ]
+  },
+  "media": {
+    "icons_library": "Phosphor Icons (@phosphor-icons/react) for precise, geometric dashboard icons.",
+    "image_urls": {
+      "mock_artisan_1": {
+        "url": "https://images.pexels.com/photos/14084305/pexels-photo-14084305.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Middle-aged artisan in workshop. Use for mock prospect profile pictures."
+      },
+      "mock_artisan_2": {
+        "url": "https://images.unsplash.com/photo-1674643925879-d457c6e93801?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDR8MHwxfHNlYXJjaHwyfHxhcnRpc2FuJTIwd29ya3Nob3AlMjBwb3J0cmFpdHxlbnwwfHx8fDE3ODExNzcwMTh8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Artisan working. Use for mock prospect profile pictures."
+      },
+      "mock_user_avatar": {
+        "url": "https://images.pexels.com/photos/20157010/pexels-photo-20157010.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Professional avatar. Use for the logged-in sales rep profile in the top-right or sidebar."
+      }
+    }
+  },
+  "instructions_to_main_agent": [
+    "Use JavaScript (.js/.jsx) for all components, NOT TypeScript (.ts/.tsx).",
+    "Set up standard React + Tailwind CSS with Shadcn primitives.",
+    "Install Phosphor Icons: yarn add @phosphor-icons/react",
+    "Implement a persistent left sidebar layout for main navigation (File du jour, Prospects, Scraper, Import, Templates, Settings).",
+    "Build the 'File du jour' as an ultra-dense, actionable list. The WhatsApp button must be prominently green (#25D366) and the LinkedIn button blue (#0A66C2).",
+    "Use Shadcn Sheet for the Prospect Detail view to prevent navigating away from the 'File du jour' table, ensuring maximum speed.",
+    "Ensure the Scraper page has a mock live progress bar (0-100%) and a status log console area.",
+    "Do not use generic gray text for headings; force `#111111` for high-contrast clarity.",
+    "Enforce `data-testid` on all buttons, links, and forms as specified in the testing rules."
+  ]
+}
