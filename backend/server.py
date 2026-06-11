@@ -16,6 +16,7 @@ import httpx
 import pandas as pd
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI, File, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
@@ -90,6 +91,8 @@ class SettingsUpdate(BaseModel):
     prenom_expediteur: Optional[str] = None
     lien_rdv: Optional[str] = None
     serper_api_key: Optional[str] = None
+    sendgrid_api_key: Optional[str] = None
+    email_expediteur: Optional[str] = None
 
 
 class EtapeModel(BaseModel):
@@ -97,6 +100,17 @@ class EtapeModel(BaseModel):
     delai_jours: int
     canal: str
     template: str
+    objet: str = ""
+
+
+class MiniAuditRequest(BaseModel):
+    prospect_id: str
+
+
+class EmailSendRequest(BaseModel):
+    prospect_id: str
+    subject: str
+    message: str
 
 
 class ScenarioUpdate(BaseModel):
@@ -585,6 +599,153 @@ async def ai_improve(body: AIImproveRequest):
     return {"message": full.strip().strip('"')}
 
 
+@api_router.post("/ai/mini-audit")
+async def ai_mini_audit(body: MiniAuditRequest):
+    """Génère un mini-audit conversion-friendly (sans note, sans jargon) prêt à envoyer."""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, StreamDone
+
+    p = await db.prospects.find_one({"id": body.prospect_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(404, "Prospect introuvable")
+    settings = await get_settings()
+    prenom = as_str(settings.get("prenom_expediteur")) or "Simon"
+    lien_rdv = as_str(settings.get("lien_rdv"))
+
+    has_site = has_real_website(p.get("site_web", ""))
+    system = (
+        f"Tu écris des mini-audits de présence en ligne pour des artisans français, envoyés via WhatsApp par {prenom}, spécialiste web. "
+        "INTERDICTIONS ABSOLUES : aucun jargon technique (jamais de SEO, HTTPS, SSL, meta, responsive, balise, viewport, CMS, référencement naturel…), "
+        "aucune note ni score, aucun pourcentage, pas plus de 3 constats. "
+        "Traduis tout en bénéfices ou risques CONCRETS pour l'artisan : être trouvé (ou pas) quand un client cherche sur Google, "
+        "recevoir des appels facilement depuis un téléphone, permettre une demande de devis en 30 secondes, rassurer avec photos de chantiers et avis clients. "
+        "Ton chaleureux, direct, vouvoiement, comme un message WhatsApp humain. "
+        "Format : 1 phrase d'intro personnalisée (ce que j'ai regardé), puis 2-3 constats courts commençant par ✅ (point fort) ou ⚠️ (manque à gagner), "
+        f"puis 1 phrase de conclusion avec proposition d'un échange rapide{' incluant ce lien : ' + lien_rdv if lien_rdv else ''}. "
+        "Maximum 750 caractères. Réponds UNIQUEMENT avec le message, rien d'autre."
+    )
+    prompt = (
+        f"Entreprise : {p.get('entreprise')} — {p.get('metier')} à {p.get('ville')}.\n"
+        f"Site web : {p.get('site_web') if has_site else 'AUCUN site trouvé'}.\n"
+        f"Constats techniques bruts (à traduire en langage client, sans jargon) : {p.get('opportunites', 'aucun')[:500]}\n"
+        f"Signal principal : {p.get('signal_principal') or 'aucun'}.\n"
+        f"Téléphone trouvé : {'oui' if p.get('telephone') else 'non'}.\n\n"
+        "Écris le mini-audit."
+    )
+
+    chat = LlmChat(
+        api_key=os.environ["EMERGENT_LLM_KEY"],
+        session_id=f"mini-audit-{uuid.uuid4()}",
+        system_message=system,
+    ).with_model("openai", os.environ.get("AI_MODEL", "gpt-5"))
+
+    full = ""
+    try:
+        async for ev in chat.stream_message(UserMessage(text=prompt)):
+            if isinstance(ev, TextDelta):
+                full += ev.content
+            elif isinstance(ev, StreamDone):
+                break
+    except Exception as e:
+        logger.exception("Erreur mini-audit IA")
+        raise HTTPException(502, f"Erreur génération IA : {e}")
+
+    audit = full.strip().strip('"')
+    await db.prospects.update_one({"id": body.prospect_id}, {"$set": {"mini_audit": audit}})
+    return {"mini_audit": audit, "wa_link": build_wa_link(p.get("telephone", ""), audit)}
+
+
+@api_router.get("/dashboard/scenario-stats")
+async def scenario_stats():
+    """Stats de réponse par scénario/profil."""
+    out = []
+    for profil in PROFILS:
+        total = await db.prospects.count_documents({"profil": profil})
+        contactes = await db.prospects.count_documents({"profil": profil, "historique.type": "envoye"})
+        repondus = await db.prospects.count_documents(
+            {"profil": profil, "statut": {"$in": ["repondu", "rdv", "gagne"]}})
+        rdv = await db.prospects.count_documents({"profil": profil, "statut": {"$in": ["rdv", "gagne"]}})
+        out.append({"profil": profil, "label": PROFIL_LABELS[profil], "total": total,
+                    "contactes": contactes, "repondus": repondus, "rdv": rdv,
+                    "taux_reponse": round(repondus / contactes * 100, 1) if contactes else 0.0})
+    return {"stats": out}
+
+
+EXPORT_COLS = [
+    ("entreprise", "Entreprise"), ("metier", "Métier"), ("ville", "Ville"),
+    ("code_postal", "Code postal"), ("adresse", "Adresse"), ("siren", "SIREN"),
+    ("telephone", "Téléphone"), ("email", "Email"), ("site_web", "Site web"),
+    ("linkedin_url", "LinkedIn"), ("note_site", "Note site (/100)"),
+    ("qualite_site", "Qualité site"), ("score_conversion", "Score conversion (/100)"),
+    ("niveau_conversion", "Niveau"), ("profil", "Profil"), ("statut", "Statut"),
+    ("etape_relance", "Étape relance"), ("signal_principal", "Signal principal"),
+    ("opportunites", "Pistes d'amélioration"), ("mini_audit", "Mini-audit"),
+    ("notes", "Notes"), ("source", "Source"), ("created_at", "Ajouté le"),
+]
+
+
+@api_router.get("/export/prospects")
+async def export_prospects(q: str = "", statut: str = "", niveau: str = "", profil: str = ""):
+    query: dict = {}
+    if q:
+        rx = {"$regex": re.escape(q), "$options": "i"}
+        query["$or"] = [{"entreprise": rx}, {"ville": rx}, {"telephone": rx}, {"email": rx}]
+    if statut:
+        query["statut"] = statut
+    if niveau:
+        query["niveau_conversion"] = niveau
+    if profil:
+        query["profil"] = profil
+    items = await db.prospects.find(query, {"_id": 0}).sort("score_conversion", -1).to_list(5000)
+    rows = [{label: p.get(key, "") for key, label in EXPORT_COLS} for p in items]
+    df = pd.DataFrame(rows, columns=[label for _, label in EXPORT_COLS])
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Prospects")
+    buf.seek(0)
+    fname = f"prospects_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M')}.xlsx"
+    return StreamingResponse(
+        buf, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'})
+
+
+# ============================================================ Email (SendGrid)
+
+def _send_email_sync(api_key: str, sender: str, to: str, subject: str, body: str) -> int:
+    from sendgrid import SendGridAPIClient
+    from sendgrid.helpers.mail import Mail
+    html = body.replace("\n", "<br>")
+    message = Mail(from_email=sender, to_emails=to, subject=subject, html_content=html)
+    sg = SendGridAPIClient(api_key)
+    resp = sg.send(message)
+    return resp.status_code
+
+
+@api_router.post("/email/send")
+async def email_send(body: EmailSendRequest):
+    settings = await get_settings()
+    key = as_str(settings.get("sendgrid_api_key"))
+    sender = as_str(settings.get("email_expediteur"))
+    if not key or not sender:
+        raise HTTPException(400, "SENDGRID_NON_CONFIGURE")
+    p = await db.prospects.find_one({"id": body.prospect_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(404, "Prospect introuvable")
+    to = as_str(p.get("email"))
+    if not to:
+        raise HTTPException(400, "Pas d'adresse email pour ce prospect")
+    try:
+        status = await asyncio.to_thread(_send_email_sync, key, sender, to, body.subject, body.message)
+    except Exception as e:
+        raise HTTPException(502, f"Erreur SendGrid : {e}")
+    if status not in (200, 201, 202):
+        raise HTTPException(502, f"SendGrid a répondu {status}")
+    await db.prospects.update_one(
+        {"id": body.prospect_id},
+        {"$push": {"historique": {"type": "email_envoye", "date": now_iso(),
+                                  "etape": p.get("etape_relance", 1)}}})
+    return {"ok": True, "to": to}
+
+
 # ============================================================ Paramètres
 
 @api_router.get("/settings")
@@ -592,7 +753,9 @@ async def read_settings():
     s = await get_settings()
     return {"prenom_expediteur": s.get("prenom_expediteur", ""),
             "lien_rdv": s.get("lien_rdv", ""),
-            "serper_api_key": s.get("serper_api_key", "")}
+            "serper_api_key": s.get("serper_api_key", ""),
+            "sendgrid_api_key": s.get("sendgrid_api_key", ""),
+            "email_expediteur": s.get("email_expediteur", "")}
 
 
 @api_router.put("/settings")

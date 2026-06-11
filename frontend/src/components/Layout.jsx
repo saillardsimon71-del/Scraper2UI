@@ -2,6 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import {
   SunHorizon,
   UsersThree,
+  Kanban,
   MagnifyingGlass,
   UploadSimple,
   ChatsCircle,
@@ -12,6 +13,7 @@ import {
 const NAV = [
   { to: "/", label: "File du jour", icon: SunHorizon, testid: "nav-file-du-jour" },
   { to: "/prospects", label: "Prospects", icon: UsersThree, testid: "nav-prospects" },
+  { to: "/pipeline", label: "Pipeline", icon: Kanban, testid: "nav-pipeline" },
   { to: "/scraper", label: "Scraper", icon: MagnifyingGlass, testid: "nav-scraper" },
   { to: "/import", label: "Import", icon: UploadSimple, testid: "nav-import" },
   { to: "/scenarios", label: "Séquences", icon: ChatsCircle, testid: "nav-scenarios" },

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { FloppyDisk, WhatsappLogo, LinkedinLogo } from "@phosphor-icons/react";
+import { FloppyDisk, WhatsappLogo, LinkedinLogo, EnvelopeSimple } from "@phosphor-icons/react";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,7 @@ export default function Scenarios() {
 
   const save = async (sc) => {
     await api.put(`/scenarios/${sc.profil}`, {
-      etapes: sc.etapes.map((e) => ({ ...e, delai_jours: Number(e.delai_jours) || 0 })),
+      etapes: sc.etapes.map((e) => ({ ...e, objet: e.objet || "", delai_jours: Number(e.delai_jours) || 0 })),
     });
     toast.success(`Séquence « ${sc.label} » enregistrée`);
   };
@@ -97,6 +97,9 @@ export default function Scenarios() {
                       <SelectItem value="linkedin">
                         <span className="flex items-center gap-1.5"><LinkedinLogo size={13} className="text-[#0A66C2]" /> LinkedIn</span>
                       </SelectItem>
+                      <SelectItem value="email">
+                        <span className="flex items-center gap-1.5"><EnvelopeSimple size={13} className="text-slate-700" /> Email</span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <div className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -116,6 +119,15 @@ export default function Scenarios() {
                     )}
                   </div>
                 </div>
+                {e.canal === "email" && (
+                  <Input
+                    data-testid={`input-objet-${sc.profil}-${e.etape}`}
+                    placeholder="Objet de l'email (ex: Votre présence en ligne — {entreprise})"
+                    value={e.objet || ""}
+                    onChange={(ev) => updateEtape(sc.profil, idx, "objet", ev.target.value)}
+                    className="rounded-sm text-sm mb-2"
+                  />
+                )}
                 <Textarea
                   data-testid={`textarea-template-${sc.profil}-${e.etape}`}
                   value={e.template}

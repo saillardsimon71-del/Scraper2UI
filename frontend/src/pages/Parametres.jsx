@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function Parametres() {
-  const [form, setForm] = useState({ prenom_expediteur: "", lien_rdv: "", serper_api_key: "" });
+  const [form, setForm] = useState({
+    prenom_expediteur: "", lien_rdv: "", serper_api_key: "", sendgrid_api_key: "", email_expediteur: "",
+  });
 
   useEffect(() => {
     api.get("/settings").then((res) => setForm(res.data));
@@ -57,6 +59,35 @@ export default function Parametres() {
           <p className="text-[11px] text-slate-400 mt-1">
             Si renseignée, le scraper cherche le site web des entreprises sans site connu via Google.
           </p>
+        </div>
+        <div className="border-t border-slate-100 pt-4">
+          <div className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-500 mb-3">Canal email (SendGrid)</div>
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-medium text-slate-600 mb-1 block">Clé API SendGrid</label>
+              <Input
+                data-testid="input-sendgrid-key"
+                type="password"
+                value={form.sendgrid_api_key}
+                onChange={(e) => setForm({ ...form, sendgrid_api_key: e.target.value })}
+                placeholder="SG.xxxxx"
+                className="rounded-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-600 mb-1 block">Email expéditeur vérifié</label>
+              <Input
+                data-testid="input-email-expediteur"
+                value={form.email_expediteur}
+                onChange={(e) => setForm({ ...form, email_expediteur: e.target.value })}
+                placeholder="simon@votredomaine.fr"
+                className="rounded-sm"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">
+                Doit être un sender vérifié dans SendGrid. Sans clé, le bouton email ouvre votre client mail (mailto).
+              </p>
+            </div>
+          </div>
         </div>
         <Button data-testid="btn-save-settings" onClick={save} className="bg-[#002FA7] hover:bg-[#00227A] text-white rounded-sm">
           <FloppyDisk size={16} className="mr-2" /> Enregistrer

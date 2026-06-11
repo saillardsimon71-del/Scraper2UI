@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { MagnifyingGlass, Trash } from "@phosphor-icons/react";
+import { MagnifyingGlass, Trash, DownloadSimple } from "@phosphor-icons/react";
 import api, { NIVEAU_STYLES, PROFIL_LABELS, STATUT_LABELS, STATUT_STYLES } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +47,17 @@ export default function Prospects() {
     load();
   };
 
+  const exportExcel = () => {
+    const params = new URLSearchParams({
+      q,
+      statut: statut === ALL ? "" : statut,
+      niveau: niveau === ALL ? "" : niveau,
+      profil: profil === ALL ? "" : profil,
+    });
+    window.open(`${process.env.REACT_APP_BACKEND_URL}/api/export/prospects?${params}`, "_blank");
+    toast.success("Export Excel en cours de téléchargement");
+  };
+
   return (
     <div className="p-8 fade-up">
       <div className="flex items-end justify-between mb-6">
@@ -54,6 +65,14 @@ export default function Prospects() {
           <h1 className="text-4xl tracking-tighter font-bold text-[#111111]">Prospects</h1>
           <p className="text-sm text-slate-500 mt-1">{total} prospects en base</p>
         </div>
+        <Button
+          data-testid="btn-export-excel"
+          onClick={exportExcel}
+          variant="outline"
+          className="rounded-sm"
+        >
+          <DownloadSimple size={16} className="mr-2" /> Exporter Excel
+        </Button>
       </div>
 
       <div className="flex gap-3 mb-4 flex-wrap">

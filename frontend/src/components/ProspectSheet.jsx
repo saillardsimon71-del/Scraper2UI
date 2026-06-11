@@ -22,6 +22,9 @@ import { Textarea } from "@/components/ui/textarea";
 export default function ProspectSheet({ prospectId, onClose, onChanged }) {
   const [data, setData] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [miniAudit, setMiniAudit] = useState("");
+  const [auditWaLink, setAuditWaLink] = useState("");
   const [draft, setDraft] = useState("");
 
   const load = useCallback(async () => {
@@ -30,6 +33,7 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
       const res = await api.get(`/prospects/${prospectId}`);
       setData(res.data);
       setDraft(res.data.message);
+      setMiniAudit(res.data.prospect.mini_audit || "");
     } catch {
       toast.error("Prospect introuvable");
     }
@@ -204,6 +208,52 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
                     </Button>
                   </a>
                 </div>
+              </div>
+
+              <div className="border border-slate-200 bg-slate-50/60 rounded-sm p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-500">
+                    Mini-audit IA
+                  </div>
+                  <Button
+                    data-testid="btn-generate-mini-audit"
+                    size="sm"
+                    onClick={generateMiniAudit}
+                    disabled={auditLoading}
+                    className="bg-[#111111] hover:bg-slate-800 text-white rounded-sm h-7 text-xs"
+                  >
+                    <Sparkle size={13} weight="fill" className="mr-1" />
+                    {auditLoading ? "Génération…" : miniAudit ? "Régénérer" : "Générer le mini-audit"}
+                  </Button>
+                </div>
+                <p className="text-[11px] text-slate-400 mb-2">
+                  Version client : sans note, sans jargon — parfait en relance pour prouver votre valeur.
+                </p>
+                {miniAudit ? (
+                  <>
+                    <div data-testid="mini-audit-text" className="text-sm text-slate-700 whitespace-pre-line bg-white border border-slate-200 rounded-sm p-3 leading-relaxed">
+                      {miniAudit}
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <Button size="sm" variant="outline" className="rounded-sm h-8 text-xs" onClick={() => copy(miniAudit)}>
+                        <Copy size={13} className="mr-1" /> Copier
+                      </Button>
+                      {p.telephone && (
+                        <a
+                          href={auditWaLink || `https://wa.me/${p.telephone.replace(/[^\d]/g, "").replace(/^0/, "33")}?text=${encodeURIComponent(miniAudit)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <Button data-testid="btn-mini-audit-whatsapp" size="sm" className="bg-[#25D366] hover:bg-[#1DA851] text-white rounded-sm h-8 text-xs">
+                            <WhatsappLogo size={13} weight="fill" className="mr-1" /> Envoyer sur WhatsApp
+                          </Button>
+                        </a>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-xs text-slate-400 italic">Pas encore généré pour ce prospect.</div>
+                )}
               </div>
 
               {data.sequence && (

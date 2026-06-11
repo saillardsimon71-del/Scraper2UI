@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import Layout from "@/components/Layout";
 import FileDuJour from "@/pages/FileDuJour";
 import Prospects from "@/pages/Prospects";
+import Pipeline from "@/pages/Pipeline";
 import Scraper from "@/pages/Scraper";
 import ImportPage from "@/pages/ImportPage";
 import Scenarios from "@/pages/Scenarios";
@@ -17,6 +18,7 @@ function App() {
           <Route element={<Layout />}>
             <Route path="/" element={<FileDuJour />} />
             <Route path="/prospects" element={<Prospects />} />
+            <Route path="/pipeline" element={<Pipeline />} />
             <Route path="/scraper" element={<Scraper />} />
             <Route path="/import" element={<ImportPage />} />
             <Route path="/scenarios" element={<Scenarios />} />

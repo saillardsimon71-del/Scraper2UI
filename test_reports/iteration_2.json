@@ -1,0 +1,67 @@
+{
+  "summary": "Iteration 2 backend tests: 6/7 passed (mini-audit test assertion false-positive on legitimate calendly https link in lien_rdv — audit itself is clean: no /100, no SEO/HTTPS/SSL/viewport/balise/CMS, ✅/⚠️ format, persisted on prospect, includes calendly link). Frontend: Pipeline page (4 stat cards + 6 kanban cols + draggable cards) renders correctly; Prospects export button present and triggers popup; Scenarios canal=email shows objet input; Parametres has sendgrid + email_expediteur inputs and shows lien_rdv=https://calendly.com/sitequivend/30min. CRITICAL bug: ProspectSheet crashes (Uncaught ReferenceError: generateMiniAudit is not defined) the moment any prospect is opened, blocking mini-audit UI, AI improve from sheet, and all sheet actions.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/ai/mini-audit", "issue": "Functional and clean output; assertion in test mistakenly flagged the legitimate calendly URL (lien_rdv) which contains 'https'. Audit text contains no /100, no SEO/SSL/viewport/balise/CMS jargon — feature is correct."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "ProspectSheet.jsx",
+        "issue": "ReferenceError: generateMiniAudit is not defined at ProspectSheet.jsx (onClick of btn-generate-mini-audit). Function is missing — only state hooks (auditLoading, miniAudit, auditWaLink) are declared. Opening ANY prospect (Pipeline card click, File du jour btn-view-prospect, Prospects table row) triggers red runtime error overlay and the Sheet body never renders.",
+        "selector": "btn-generate-mini-audit",
+        "priority": "CRITICAL"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Pipeline kanban drag&drop",
+        "issue": "HTML5 dragstart/drop via dispatch_event did not move card (a_contacter stayed at 11, repondu stayed at 0). dataTransfer payload isn't populated by synthetic events — manual user dragging likely works (handlers set/get text/plain correctly), but cannot be reliably automated without a real native drag. Recommend Playwright page.drag_and_drop with real coords + mouse moves; if still failing, consider exposing a fallback non-DnD action (e.g. status dropdown on card or context menu).",
+        "affected_selectors": ["kanban-card", "kanban-col-a_contacter", "kanban-col-repondu"]
+      },
+      {
+        "flow": "btn-email-send visibility on File du jour",
+        "issue": "Could not verify in this run because the active queue items use whatsapp canal (no email step active after scenario restore). Recommend setting one prospect's profil to a scenario whose step 1 canal=email to validate the mailto fallback toast without a SendGrid key."
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "Prospect Sheet (and all Dialogs)",
+        "issues": [
+          "Persistent a11y warnings still present from iteration 1: 'DialogContent requires a DialogTitle' and 'Missing Description or aria-describedby'. Wrap title with VisuallyHidden or add aria-describedby."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration2.py",
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/iteration2_results.xml"
+  ],
+  "action_items": [
+    "CRITICAL: Define generateMiniAudit function in ProspectSheet.jsx (mirror improveAI pattern): const generateMiniAudit = async () => { setAuditLoading(true); try { const res = await api.post('/ai/mini-audit', { prospect_id: prospectId }); setMiniAudit(res.data.mini_audit); setAuditWaLink(res.data.wa_link); toast.success('Mini-audit généré'); } catch { toast.error('Erreur IA — réessayez'); } finally { setAuditLoading(false); } };",
+    "Add a11y DialogTitle/Description (VisuallyHidden wrapper) to Sheet/Dialog components to clear persistent warnings.",
+    "Verify btn-email-send visibility/mailto-fallback by configuring a scenario step with canal=email on an active prospect."
+  ],
+  "critical_code_review_comments": [
+    "ProspectSheet.jsx onClick references undefined function — should have been caught by ESLint no-undef rule; run lint before commit.",
+    "Pipeline.jsx drag&drop has no a11y fallback (keyboard / status selector). Consider adding a button-based status changer on each kanban card.",
+    "Settings model accepts sendgrid_api_key but read_settings returns it in clear text — consider redacting when GET (currently low risk as no auth).",
+    "/api/ai/mini-audit has no rate limit and persists raw LLM output to DB — add max length cap (already prompted but not enforced server-side)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration2.py (new)"
+  ],
+  "success_rate": {
+    "backend": "100% functional (6/7 pytest pass; the 7th is a test-assertion false-positive on calendly URL, feature works)",
+    "frontend": "~70% — Pipeline/Prospects/Scenarios/Parametres OK; ProspectSheet entirely broken by missing generateMiniAudit fn which blocks any in-sheet workflow (mini-audit, AI improve, mark-sent inside sheet)"
+  },
+  "test_credentials": "N/A — app has no authentication.",
+  "seed_data_creation": "No new seed data. test_iteration2 creates one TEST_simon_*@example.com email_expediteur briefly and restores; modifies pas_de_site scenario briefly and restores.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "After main agent defines generateMiniAudit in /app/frontend/src/components/ProspectSheet.jsx, retest: (1) open prospect sheet from Pipeline kanban card AND from File du jour btn-view-prospect → no red overlay, sheet body renders; (2) click btn-generate-mini-audit → after ~15-30s mini-audit-text appears with Copier + btn-mini-audit-whatsapp buttons; (3) verify mini-audit text has no /100, no SEO/HTTPS/SSL/viewport jargon. Do NOT re-run TestMiniAudit (real AI cost — already validated this iteration). Backend iteration_2 features (scenario-stats, export xlsx, email/send fallback, scenario email channel + objet, settings sendgrid persistence) all confirmed working — no retest needed.",
+  "rca of the issue": "ProspectSheet.jsx (line 221) binds onClick={generateMiniAudit} but no const generateMiniAudit = ... declaration exists in the component. React renders the JSX during reconciliation, evaluates the identifier in the component closure scope, and throws ReferenceError. The error propagates as Uncaught (no error boundary) → react-error-overlay shows the red screen. Fix: add async generateMiniAudit handler that posts to /api/ai/mini-audit and sets state."
+}

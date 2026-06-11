@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import {
   WhatsappLogo,
   LinkedinLogo,
+  EnvelopeSimple,
   CheckCircle,
   ArrowBendUpRight,
   Eye,
@@ -72,6 +73,25 @@ export default function FileDuJour() {
       /* clipboard refusé */
     }
     window.open(item.linkedin_link, "_blank");
+  };
+
+  const sendEmail = async (item) => {
+    const p = item.prospect;
+    if (!p.email) {
+      toast.error("Pas d'adresse email pour ce prospect");
+      return;
+    }
+    try {
+      await api.post("/email/send", { prospect_id: p.id, subject: item.objet, message: item.message });
+      toast.success(`Email envoyé à ${p.email} — pensez à « Marquer envoyé »`);
+    } catch (e) {
+      if (e.response?.data?.detail === "SENDGRID_NON_CONFIGURE") {
+        window.open(`mailto:${p.email}?subject=${encodeURIComponent(item.objet)}&body=${encodeURIComponent(item.message)}`);
+        toast.info("SendGrid non configuré — ouverture de votre client mail (clé dans Paramètres)");
+      } else {
+        toast.error(e.response?.data?.detail || "Envoi email impossible");
+      }
+    }
   };
 
   return (
@@ -144,6 +164,18 @@ export default function FileDuJour() {
                       <div className="text-xs text-slate-400 mt-1 line-clamp-1 italic">“{item.message}”</div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
+                      {item.canal === "email" && (
+                        <Button
+                          data-testid="btn-email-send"
+                          size="sm"
+                          className="bg-[#111111] hover:bg-slate-800 text-white rounded-sm h-8"
+                          onClick={() => sendEmail(item)}
+                          disabled={!p.email}
+                          title={p.email ? `Envoyer l'email à ${p.email}` : "Pas d'email"}
+                        >
+                          <EnvelopeSimple size={16} weight="fill" />
+                        </Button>
+                      )}
                       <Button
                         data-testid="btn-whatsapp-send"
                         size="sm"
