@@ -227,7 +227,7 @@ async def dashboard_stats():
     total = await db.prospects.count_documents({})
     file_du_jour = await db.prospects.count_documents(
         {"statut": "a_contacter", "date_prochaine_action": {"$lte": now_iso()},
-         "canal_contact": {"$in": ["whatsapp", "linkedin"]}})
+         "canal_contact": {"$in": ["whatsapp", "linkedin", "telephone"]}})
     envoyes_auj = await db.prospects.count_documents(
         {"historique": {"$elemMatch": {"type": "envoye", "date": {"$gte": today_start_iso()}}}})
     repondus = await db.prospects.count_documents({"statut": {"$in": ["repondu", "rdv", "gagne"]}})
@@ -248,14 +248,14 @@ async def dashboard_stats():
 
 @api_router.get("/queue")
 async def get_queue(limit: int = 50):
-    """File du jour : actions manuelles uniquement (WhatsApp / LinkedIn).
+    """File du jour : actions manuelles uniquement (WhatsApp / LinkedIn / appel téléphone).
 
     Les prospects au canal email sont gérés par le pilote automatique.
     """
     settings = await get_settings()
     cursor = db.prospects.find(
         {"statut": "a_contacter", "date_prochaine_action": {"$lte": now_iso()},
-         "canal_contact": {"$in": ["whatsapp", "linkedin"]}},
+         "canal_contact": {"$in": ["whatsapp", "linkedin", "telephone"]}},
         {"_id": 0},
     ).sort("score_conversion", -1).limit(limit)
     items = []

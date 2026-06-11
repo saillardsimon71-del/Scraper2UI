@@ -215,7 +215,10 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
                 </div>
                 <div className="flex gap-2 mt-3">
                   {data.canal === "whatsapp" && data.wa_link && (
-                    <a href={`https://wa.me/${data.wa_link.split("wa.me/")[1].split("?")[0]}?text=${encodeURIComponent(draft)}`} target="_blank" rel="noreferrer" className="flex-1">
+                    <a
+                      href={(() => { try { const u = new URL(data.wa_link); u.searchParams.set("text", draft); return u.toString(); } catch { return data.wa_link; } })()}
+                      target="_blank" rel="noreferrer" className="flex-1"
+                    >
                       <Button data-testid="sheet-btn-whatsapp" className="w-full bg-[#25D366] hover:bg-[#1DA851] text-white rounded-sm h-9">
                         <WhatsappLogo size={16} weight="fill" className="mr-2" /> WhatsApp
                       </Button>
@@ -225,6 +228,13 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
                     <a href={data.linkedin_link} target="_blank" rel="noreferrer" className="flex-1" onClick={() => copy(draft)}>
                       <Button data-testid="sheet-btn-linkedin" className="w-full bg-[#0A66C2] hover:bg-[#004182] text-white rounded-sm h-9">
                         <LinkedinLogo size={16} weight="fill" className="mr-2" /> LinkedIn
+                      </Button>
+                    </a>
+                  )}
+                  {data.canal === "telephone" && p.telephone && (
+                    <a href={`tel:${p.telephone}`} className="flex-1">
+                      <Button data-testid="sheet-btn-telephone" className="w-full bg-[#111111] hover:bg-slate-800 text-white rounded-sm h-9">
+                        <Phone size={16} weight="fill" className="mr-2" /> Appeler {p.telephone}
                       </Button>
                     </a>
                   )}

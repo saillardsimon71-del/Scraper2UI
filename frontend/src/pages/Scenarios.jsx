@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { FloppyDisk, WhatsappLogo, LinkedinLogo, EnvelopeSimple } from "@phosphor-icons/react";
+import { FloppyDisk, WhatsappLogo, LinkedinLogo, EnvelopeSimple, Phone } from "@phosphor-icons/react";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,11 +60,13 @@ export default function Scenarios() {
         Le canal est choisi automatiquement selon les coordonnées disponibles, par priorité :{" "}
         <span className="inline-flex items-center gap-1 font-semibold"><EnvelopeSimple size={13} className="text-slate-700" /> Email</span>
         {" › "}
-        <span className="inline-flex items-center gap-1 font-semibold"><WhatsappLogo size={13} className="text-[#25D366]" /> WhatsApp</span>
+        <span className="inline-flex items-center gap-1 font-semibold"><WhatsappLogo size={13} className="text-[#25D366]" /> WhatsApp</span> (mobile 06/07 uniquement)
         {" › "}
-        <span className="inline-flex items-center gap-1 font-semibold"><LinkedinLogo size={13} className="text-[#0A66C2]" /> LinkedIn</span>.
+        <span className="inline-flex items-center gap-1 font-semibold"><LinkedinLogo size={13} className="text-[#0A66C2]" /> LinkedIn</span>
+        {" › "}
+        <span className="inline-flex items-center gap-1 font-semibold"><Phone size={13} className="text-slate-700" /> Téléphone</span> (appel sur fixe).
         Toute la séquence (étape 1 → dernière relance) reste sur ce même canal.
-        Sans aucun de ces trois contacts, le prospect n'est pas ajouté.
+        Sans aucun de ces contacts, le prospect n'est pas ajouté.
         L'objet ci-dessous n'est utilisé que pour les prospects contactés par email (envoi automatique par le pilote).
       </div>
 

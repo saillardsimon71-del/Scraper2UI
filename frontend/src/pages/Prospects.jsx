@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { MagnifyingGlass, Trash, DownloadSimple, WhatsappLogo, LinkedinLogo, EnvelopeSimple, MagicWand } from "@phosphor-icons/react";
+import { MagnifyingGlass, Trash, DownloadSimple, WhatsappLogo, LinkedinLogo, EnvelopeSimple, Phone, MagicWand } from "@phosphor-icons/react";
 import api, { NIVEAU_STYLES, PROFIL_LABELS, STATUT_LABELS, STATUT_STYLES } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ const CANAL_ICONS = {
   email: <EnvelopeSimple size={15} className="text-slate-700" />,
   whatsapp: <WhatsappLogo size={15} className="text-[#25D366]" />,
   linkedin: <LinkedinLogo size={15} className="text-[#0A66C2]" />,
+  telephone: <Phone size={15} className="text-slate-700" />,
 };
 
 export default function Prospects() {

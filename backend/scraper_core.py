@@ -660,9 +660,9 @@ def build_wa_link(telephone: str, message: str = "") -> str:
         digits = "33" + digits[1:]
     if not digits or len(digits) < 10:
         return ""
-    link = f"https://wa.me/{digits}"
+    link = f"https://web.whatsapp.com/send?phone={digits}"
     if message:
-        link += f"?text={quote(message)}"
+        link += f"&text={quote(message)}"
     return link
 
 

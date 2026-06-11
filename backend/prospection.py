@@ -15,13 +15,13 @@ PROFIL_LABELS = {
     "site_moyen": "Site moyen",
 }
 
-CANAL_LABELS = {"email": "Email", "whatsapp": "WhatsApp", "linkedin": "LinkedIn"}
+CANAL_LABELS = {"email": "Email", "whatsapp": "WhatsApp", "linkedin": "LinkedIn", "telephone": "Téléphone"}
 
 
 def determine_canal(p: dict) -> str:
-    """Canal unique de toute la séquence, par priorité : email > whatsapp > linkedin.
+    """Canal unique de toute la séquence, par priorité :
+    email > whatsapp (mobile 06/07) > linkedin > téléphone (appel sur fixe).
 
-    WhatsApp seulement si le numéro est un mobile (06/07) — un fixe n'y est jamais.
     Retourne "" si le prospect n'a aucun moyen de contact (à supprimer / ne pas ajouter).
     """
     if as_str(p.get("email")):
@@ -30,6 +30,8 @@ def determine_canal(p: dict) -> str:
         return "whatsapp"
     if as_str(p.get("linkedin_url")):
         return "linkedin"
+    if as_str(p.get("telephone")):
+        return "telephone"
     return ""
 
 

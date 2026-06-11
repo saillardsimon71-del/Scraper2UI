@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import {
   WhatsappLogo,
   LinkedinLogo,
+  Phone,
   CheckCircle,
   ArrowBendUpRight,
   Eye,
@@ -81,7 +82,7 @@ export default function FileDuJour() {
           <h1 className="text-4xl tracking-tighter font-bold text-[#111111]">File du jour</h1>
           <p className="text-sm text-slate-500 mt-1">
             {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })} —
-            actions manuelles WhatsApp & LinkedIn, triées par score. Les prospects avec email sont gérés par le pilote automatique.
+            actions manuelles WhatsApp, LinkedIn & appels, triées par score. Les prospects avec email sont gérés par le pilote automatique.
           </p>
         </div>
       </div>
@@ -165,6 +166,17 @@ export default function FileDuJour() {
                           title="Copier le message + ouvrir LinkedIn"
                         >
                           <LinkedinLogo size={16} weight="fill" />
+                        </Button>
+                      )}
+                      {item.canal === "telephone" && (
+                        <Button
+                          data-testid="btn-telephone-call"
+                          size="sm"
+                          className="bg-[#111111] hover:bg-slate-800 text-white rounded-sm h-8"
+                          onClick={() => (window.location.href = `tel:${p.telephone}`)}
+                          title={`Appeler ${p.telephone} — le message sert de script d'appel`}
+                        >
+                          <Phone size={16} weight="fill" />
                         </Button>
                       )}
                       <Button
