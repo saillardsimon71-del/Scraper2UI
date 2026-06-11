@@ -62,10 +62,10 @@ def today_start_iso() -> str:
 # ============================================================ Modèles
 
 class ScrapeRequest(BaseModel):
-    metier: str
-    ville: str
+    metiers: list[str]
+    villes: list[str]
     departement: str = ""
-    limite: int = 20
+    limite: int = 20  # par combinaison métier × ville
     source: str = "gouv"  # gouv | osm
     auditer: bool = True
 
@@ -478,12 +478,21 @@ async def run_scrape_job(job_id: str, params: ScrapeRequest):
         settings = await get_settings()
         serper_key = as_str(settings.get("serper_api_key"))
         async with httpx.AsyncClient(timeout=20, headers={"User-Agent": USER_AGENT}) as http:
-            await _job_log(job_id, f"Découverte via {params.source} : {params.metier} à {params.ville}…",
-                           statut="decouverte", progress=5)
-            if params.source == "osm":
-                items = await discover_osm(http, params.metier, params.ville, limite=params.limite)
-            else:
-                items = await discover_gouv(http, params.metier, params.ville, params.departement, params.limite)
+            combos = [(m, v) for m in params.metiers for v in params.villes]
+            items: list[dict] = []
+            for n, (metier, ville) in enumerate(combos, 1):
+                await _job_log(job_id,
+                               f"Découverte via {params.source} ({n}/{len(combos)}) : {metier} à {ville}…",
+                               statut="decouverte", progress=min(2 + int(n / len(combos) * 13), 15))
+                try:
+                    if params.source == "osm":
+                        found = await discover_osm(http, metier, ville, limite=params.limite)
+                    else:
+                        found = await discover_gouv(http, metier, ville, params.departement, params.limite)
+                except Exception as e:
+                    await _job_log(job_id, f"⚠️ {metier} à {ville} : {e}")
+                    found = []
+                items.extend(found)
             await _job_log(job_id, f"{len(items)} entreprises découvertes", total=len(items), progress=15)
 
             if not items:
@@ -502,9 +511,10 @@ async def run_scrape_job(job_id: str, params: ScrapeRequest):
                         if serper_key and not has_real_website(item.get("site_web", "")):
                             item["site_web"] = await serper_find_site(
                                 http, serper_key, item["entreprise"], item.get("ville", ""), item.get("metier", ""))
+                        # Enrichissement contact toujours actif (le canal en dépend)
+                        if has_real_website(item.get("site_web", "")) and not item.get("telephone"):
+                            item["telephone"] = await enrich_phone(http, item["site_web"])
                         if params.auditer:
-                            if has_real_website(item.get("site_web", "")) and not item.get("telephone"):
-                                item["telephone"] = await enrich_phone(http, item["site_web"])
                             audit = await audit_site(http, item.get("site_web", ""),
                                                      item.get("telephone", ""), item.get("metier", ""))
                             item.update(audit)
