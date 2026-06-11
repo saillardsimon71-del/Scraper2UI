@@ -27,9 +27,9 @@ from prospection import (
 )
 from scraper_core import (
     METIERS, USER_AGENT, as_str, audit_site, build_linkedin_link, build_wa_link,
-    compute_score, discover_gouv, discover_osm, enrich_phone, has_real_website,
-    niveau_from_score, normalize_company_name, normalize_french_phone,
-    phone_digits, resolve_site_web, serper_find_site,
+    compute_score, discover_gouv, discover_osm, enrich_email, enrich_phone,
+    has_real_website, niveau_from_score, normalize_company_name,
+    normalize_french_phone, phone_digits, resolve_site_web, serper_find_site,
 )
 from autopilot import (
     autopilot_loop, count_sent_today, eligible_prospects, in_window,
@@ -514,6 +514,8 @@ async def run_scrape_job(job_id: str, params: ScrapeRequest):
                         # Enrichissement contact toujours actif (le canal en dépend)
                         if has_real_website(item.get("site_web", "")) and not item.get("telephone"):
                             item["telephone"] = await enrich_phone(http, item["site_web"])
+                        if has_real_website(item.get("site_web", "")) and not as_str(item.get("email")):
+                            item["email"] = await enrich_email(http, item["site_web"])
                         if params.auditer:
                             audit = await audit_site(http, item.get("site_web", ""),
                                                      item.get("telephone", ""), item.get("metier", ""))
@@ -546,6 +548,60 @@ async def run_scrape_job(job_id: str, params: ScrapeRequest):
     except Exception as e:
         logger.exception("Job scraping en erreur")
         await _job_log(job_id, f"Erreur : {e}", statut="erreur")
+
+
+async def run_enrich_emails_job(job_id: str):
+    """Backfill : cherche l'email sur le site des prospects qui n'en ont pas."""
+    try:
+        vide = {"$not": {"$regex": r"\S"}}
+        prospects = await db.prospects.find(
+            {"email": vide, "site_web": {"$regex": "^http"}}, {"_id": 0}).to_list(2000)
+        total = len(prospects)
+        await _job_log(job_id, f"Recherche d'emails sur {total} sites…", statut="en_cours", total=total)
+        trouves, traites = 0, 0
+        lock = asyncio.Lock()
+        sem = asyncio.Semaphore(6)
+
+        async with httpx.AsyncClient(timeout=15, headers={"User-Agent": USER_AGENT}) as http:
+            async def process(p: dict):
+                nonlocal trouves, traites
+                email = ""
+                async with sem:
+                    try:
+                        email = await enrich_email(http, p["site_web"])
+                    except Exception:
+                        pass
+                async with lock:
+                    traites += 1
+                    if email:
+                        trouves += 1
+                        updates = {"email": email}
+                        deja_contacte = any(h.get("type") in ("envoye", "email_envoye")
+                                            for h in p.get("historique", []))
+                        if not deja_contacte:  # canal figé dès le premier envoi
+                            updates["canal_contact"] = "email"
+                        await db.prospects.update_one({"id": p["id"]}, {"$set": updates})
+                    await db.jobs.update_one({"id": job_id}, {"$set": {
+                        "progress": int(traites / max(total, 1) * 100),
+                        "traites": traites, "trouves": trouves}})
+
+            await asyncio.gather(*[process(p) for p in prospects])
+        await _job_log(job_id, f"Terminé : {trouves} emails trouvés sur {total} sites visités.",
+                       statut="termine", progress=100)
+    except Exception as e:
+        logger.exception("Job enrichissement emails en erreur")
+        await _job_log(job_id, f"Erreur : {e}", statut="erreur")
+
+
+@api_router.post("/prospects/enrich-emails")
+async def start_enrich_emails():
+    job = {"id": str(uuid.uuid4()), "type": "enrich_emails", "statut": "demarre",
+           "progress": 0, "total": 0, "traites": 0, "trouves": 0,
+           "logs": [], "created_at": now_iso()}
+    await db.jobs.insert_one({**job})
+    asyncio.create_task(run_enrich_emails_job(job["id"]))
+    return {k: v for k, v in job.items() if k != "_id"}
+
 
 
 @api_router.post("/scrape")

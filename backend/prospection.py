@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from datetime import datetime, timedelta, timezone
 
-from scraper_core import as_str, has_real_website
+from scraper_core import as_str, has_real_website, is_mobile_fr
 
 PROFILS = ["pas_de_site", "site_ancien", "signal_chaud", "site_moyen"]
 
@@ -21,11 +21,12 @@ CANAL_LABELS = {"email": "Email", "whatsapp": "WhatsApp", "linkedin": "LinkedIn"
 def determine_canal(p: dict) -> str:
     """Canal unique de toute la séquence, par priorité : email > whatsapp > linkedin.
 
+    WhatsApp seulement si le numéro est un mobile (06/07) — un fixe n'y est jamais.
     Retourne "" si le prospect n'a aucun moyen de contact (à supprimer / ne pas ajouter).
     """
     if as_str(p.get("email")):
         return "email"
-    if as_str(p.get("telephone")):
+    if is_mobile_fr(p.get("telephone", "")):
         return "whatsapp"
     if as_str(p.get("linkedin_url")):
         return "linkedin"

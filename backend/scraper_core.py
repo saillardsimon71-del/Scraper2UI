@@ -5,6 +5,7 @@ import json
 import re
 import unicodedata
 from urllib.parse import urlparse, quote
+from html import unescape
 
 import httpx
 import phonenumbers
@@ -359,6 +360,68 @@ async def enrich_phone(http: httpx.AsyncClient, site_web: str) -> str:
         if phones:
             return phones[0]
     return ""
+
+
+def is_mobile_fr(tel: str) -> bool:
+    """True si le numéro est un mobile français (06/07) — seul type joignable sur WhatsApp."""
+    raw = as_str(tel)
+    if not raw:
+        return False
+    try:
+        num = phonenumbers.parse(raw, "FR")
+    except NumberParseException:
+        return False
+    return phonenumbers.number_type(num) in (
+        phonenumbers.PhoneNumberType.MOBILE,
+        phonenumbers.PhoneNumberType.FIXED_LINE_OR_MOBILE,
+    )
+
+
+BAD_EMAIL_PARTS = (
+    "example", "exemple", "sentry", "wixpress", "@domain", "email.com", "votre",
+    "prenom", "wordpress", "schema.org", "u003e", "%20", "..", "@2x", "no-reply", "noreply",
+)
+ASSET_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg",
+                    ".css", ".js", ".woff", ".woff2", ".ico", ".pdf")
+
+
+def _extract_emails(html_text: str) -> list[str]:
+    out: list[str] = []
+    for raw in EMAIL_PATTERN.findall(unescape(html_text)):
+        e = raw.strip().strip(".").lower()
+        if any(b in e for b in BAD_EMAIL_PARTS) or e.endswith(ASSET_EXTENSIONS):
+            continue
+        if e not in out:
+            out.append(e)
+    return out
+
+
+async def enrich_email(http: httpx.AsyncClient, site_web: str) -> str:
+    """Cherche un email sur le site : accueil puis pages contact / mentions légales.
+
+    Privilégie un email du même domaine que le site (contact@domaine.fr…).
+    """
+    if not has_real_website(site_web):
+        return ""
+    domain = re.sub(r"^www\.", "", urlparse(site_web).netloc).lower()
+    urls = [site_web] + [site_web.rstrip("/") + p for p in CONTACT_PATHS]
+    found: list[str] = []
+    for url in urls:
+        try:
+            resp = await http.get(url, follow_redirects=True)
+            if resp.status_code >= 400:
+                continue
+        except httpx.HTTPError:
+            continue
+        for e in _extract_emails(resp.text):
+            if e not in found:
+                found.append(e)
+        if any(e.split("@")[-1] == domain for e in found):
+            break
+    for e in found:
+        if e.split("@")[-1] == domain:
+            return e
+    return found[0] if found else ""
 
 
 # ---------------------------------------------------------------- audit site + signaux

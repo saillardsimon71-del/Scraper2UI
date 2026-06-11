@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { MagnifyingGlass, Trash, DownloadSimple, WhatsappLogo, LinkedinLogo, EnvelopeSimple } from "@phosphor-icons/react";
+import { MagnifyingGlass, Trash, DownloadSimple, WhatsappLogo, LinkedinLogo, EnvelopeSimple, MagicWand } from "@phosphor-icons/react";
 import api, { NIVEAU_STYLES, PROFIL_LABELS, STATUT_LABELS, STATUT_STYLES } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,28 @@ export default function Prospects() {
     load();
   };
 
+  const [enrichJob, setEnrichJob] = useState(null);
+
+  const enrichEmails = async () => {
+    const res = await api.post("/prospects/enrich-emails");
+    setEnrichJob(res.data);
+    toast.info("Recherche d'emails lancée sur les sites des prospects…");
+    const interval = setInterval(async () => {
+      const j = (await api.get(`/scrape/jobs/${res.data.id}`)).data;
+      setEnrichJob(j);
+      if (["termine", "erreur"].includes(j.statut)) {
+        clearInterval(interval);
+        setEnrichJob(null);
+        if (j.statut === "termine") {
+          toast.success(`${j.trouves} email(s) trouvé(s) sur ${j.total} sites visités`);
+        } else {
+          toast.error("La recherche d'emails a échoué");
+        }
+        load();
+      }
+    }, 2000);
+  };
+
   const exportExcel = () => {
     const params = new URLSearchParams({
       q,
@@ -71,14 +93,27 @@ export default function Prospects() {
           <h1 className="text-4xl tracking-tighter font-bold text-[#111111]">Prospects</h1>
           <p className="text-sm text-slate-500 mt-1">{total} prospects en base</p>
         </div>
-        <Button
-          data-testid="btn-export-excel"
-          onClick={exportExcel}
-          variant="outline"
-          className="rounded-sm"
-        >
-          <DownloadSimple size={16} className="mr-2" /> Exporter Excel
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            data-testid="btn-enrich-emails"
+            onClick={enrichEmails}
+            disabled={!!enrichJob}
+            variant="outline"
+            className="rounded-sm"
+            title="Visite les sites des prospects sans email pour y trouver une adresse"
+          >
+            <MagicWand size={16} className="mr-2" />
+            {enrichJob ? `Recherche… ${enrichJob.traites ?? 0}/${enrichJob.total ?? "?"}` : "Trouver les emails manquants"}
+          </Button>
+          <Button
+            data-testid="btn-export-excel"
+            onClick={exportExcel}
+            variant="outline"
+            className="rounded-sm"
+          >
+            <DownloadSimple size={16} className="mr-2" /> Exporter Excel
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-3 mb-4 flex-wrap">
