@@ -12,6 +12,7 @@ import {
   CalendarCheck,
   Prohibit,
   ArrowCounterClockwise,
+  CaretRight,
 } from "@phosphor-icons/react";
 import api, { NIVEAU_STYLES, PROFIL_LABELS, STATUT_LABELS, STATUT_STYLES } from "@/lib/api";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -26,6 +27,7 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
   const [miniAudit, setMiniAudit] = useState("");
   const [auditWaLink, setAuditWaLink] = useState("");
   const [draft, setDraft] = useState("");
+  const [openHist, setOpenHist] = useState(null);
 
   const load = useCallback(async () => {
     if (!prospectId) return;
@@ -335,8 +337,26 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
                   <div className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-500 mb-2">Historique</div>
                   <div className="space-y-1">
                     {[...p.historique].reverse().map((h, i) => (
-                      <div key={i} className="text-xs text-slate-500 font-mono">
-                        {new Date(h.date).toLocaleString("fr-FR")} — {h.type} (étape {h.etape})
+                      <div key={i}>
+                        <button
+                          data-testid="historique-entry"
+                          onClick={() => h.message && setOpenHist(openHist === i ? null : i)}
+                          className={`w-full text-left text-xs text-slate-500 font-mono flex items-center gap-1.5 ${h.message ? "hover:text-[#002FA7] cursor-pointer" : "cursor-default"}`}
+                        >
+                          {h.message && (
+                            <CaretRight size={11} className={`shrink-0 transition-transform ${openHist === i ? "rotate-90" : ""}`} />
+                          )}
+                          <span>
+                            {new Date(h.date).toLocaleString("fr-FR")} — {h.type}
+                            {h.canal ? ` · ${h.canal}` : ""} (étape {h.etape}){h.auto ? " · auto" : ""}
+                          </span>
+                        </button>
+                        {openHist === i && h.message && (
+                          <div data-testid="historique-message" className="ml-4 mt-1 mb-2 bg-slate-50 border border-slate-200 rounded-sm p-3 text-xs text-slate-700 whitespace-pre-line leading-relaxed">
+                            {h.objet && <div className="font-semibold mb-1.5">Objet : {h.objet}</div>}
+                            {h.message}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

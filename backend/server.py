@@ -345,7 +345,14 @@ async def prospect_action(prospect_id: str, body: ActionRequest):
 
     if action == "envoye":
         scenario = await get_scenario(p.get("profil", "site_moyen"))
-        updates.update(advance_updates(p, scenario.get("etapes", [])))
+        etapes = scenario.get("etapes", [])
+        if etapes:  # conserve le message réellement envoyé dans l'historique
+            settings = await get_settings()
+            idx = min(max(int(p.get("etape_relance", 1)) - 1, 0), len(etapes) - 1)
+            event["canal"] = p.get("canal_contact", "")
+            event["message"] = as_str(p.get("message_personnalise")) or render_message(
+                etapes[idx].get("template", ""), p, settings)
+        updates.update(advance_updates(p, etapes))
     elif action == "skip":
         updates["date_prochaine_action"] = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
     elif action in ("repondu", "rdv", "gagne", "perdu", "opt_out"):
@@ -760,11 +767,12 @@ async def email_send(body: EmailSendRequest):
         "id": str(uuid.uuid4()), "prospect_id": body.prospect_id,
         "entreprise": as_str(p.get("entreprise")), "destinataire": to,
         "objet": body.subject, "etape": p.get("etape_relance", 1),
-        "auto": False, "statut": "envoye", "date": now_iso()})
+        "message": body.message, "auto": False, "statut": "envoye", "date": now_iso()})
     await db.prospects.update_one(
         {"id": body.prospect_id},
-        {"$push": {"historique": {"type": "email_envoye", "date": now_iso(),
-                                  "etape": p.get("etape_relance", 1)}}})
+        {"$push": {"historique": {"type": "email_envoye", "canal": "email", "date": now_iso(),
+                                  "etape": p.get("etape_relance", 1),
+                                  "objet": body.subject, "message": body.message}}})
     return {"ok": True, "to": to}
 
 

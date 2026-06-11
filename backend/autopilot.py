@@ -130,7 +130,7 @@ async def run_tick(db, force: bool = False) -> dict:
             "id": str(uuid.uuid4()), "prospect_id": p["id"],
             "entreprise": as_str(p.get("entreprise")), "destinataire": p["email"],
             "objet": objet, "etape": int(p.get("etape_relance", 1)),
-            "auto": True, "date": now_iso(),
+            "message": message, "auto": True, "date": now_iso(),
         }
         try:
             status = await asyncio.to_thread(
@@ -144,7 +144,7 @@ async def run_tick(db, force: bool = False) -> dict:
                  "$push": {"historique": {
                      "type": "envoye", "canal": "email", "auto": True,
                      "date": now_iso(), "etape": int(p.get("etape_relance", 1)),
-                     "objet": objet}}})
+                     "objet": objet, "message": message}}})
             envoyes += 1
         except Exception as e:
             logger.warning(f"Autopilot : échec envoi à {p['email']} : {e}")
