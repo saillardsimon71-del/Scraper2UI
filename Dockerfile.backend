@@ -1,0 +1,34 @@
+# Backend FastAPI - Cockpit Prospection
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Dépendances système (lxml, cryptography, etc.)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libxml2-dev libxslt1-dev zlib1g-dev \
+    libffi-dev libssl-dev \
+    curl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+# Dépendances Python
+COPY backend/requirements.txt /tmp/requirements.txt
+# On installe sans le wheel privé litellm (qui n'est pas accessible hors d'Emergent)
+# ni emergentintegrations (idem). L'IA via Emergent ne sera donc pas disponible
+# hors d'Emergent — toutes les autres fonctionnalités marchent.
+RUN grep -vE '^(litellm|emergentintegrations) ?' /tmp/requirements.txt > /tmp/req.txt \
+  && pip install --no-cache-dir -r /tmp/req.txt
+
+# Code
+COPY backend /app/backend
+WORKDIR /app/backend
+
+# Dossier backup partagé via volume
+RUN mkdir -p /app/data/backup
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+EXPOSE 8001
+
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001"]

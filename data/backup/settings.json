@@ -1,0 +1,7 @@
+[
+  {
+    "_id": "global",
+    "migration_canal_unique": true,
+    "webhook_token": "***REDACTED***"
+  }
+]

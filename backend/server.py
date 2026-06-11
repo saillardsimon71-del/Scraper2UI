@@ -35,6 +35,9 @@ from autopilot import (
     autopilot_loop, count_sent_today, eligible_prospects, in_window,
     run_tick, send_email_sync,
 )
+from backup import (
+    backup_loop, backup_status, dump_db, restore_db, restore_if_empty,
+)
 from webhook import create_router as create_webhook_router
 
 ROOT_DIR = Path(__file__).parent
@@ -906,6 +909,25 @@ async def write_settings(body: SettingsUpdate):
     return await read_settings()
 
 
+# ============================================================ Sauvegarde / restauration
+
+@api_router.get("/backup/status")
+async def api_backup_status():
+    return await backup_status(db)
+
+
+@api_router.post("/backup/dump")
+async def api_backup_dump():
+    """Exporte immédiatement la base vers /app/data/backup (fichiers JSON)."""
+    return await dump_db(db)
+
+
+@api_router.post("/backup/restore")
+async def api_backup_restore(drop_existing: bool = True):
+    """Restaure la base depuis /app/data/backup. Par défaut, écrase les collections."""
+    return await restore_db(db, drop_existing=drop_existing)
+
+
 # ============================================================ App setup
 
 api_router.include_router(create_webhook_router(db))
@@ -964,7 +986,14 @@ async def seed():
     await db.prospects.create_index("id", unique=True)
     await db.prospects.create_index([("statut", 1), ("date_prochaine_action", 1)])
     await db.email_log.create_index([("date", -1)])
+    # Restauration automatique depuis le backup JSON si la base est vide
+    # (cas d'un pod K8s recréé : Mongo local wipé mais /app/data/backup conservé via Git).
+    try:
+        await restore_if_empty(db)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Restauration auto échouée : %s", exc)
     asyncio.create_task(autopilot_loop(db))
+    asyncio.create_task(backup_loop(db))
 
 
 @app.on_event("shutdown")

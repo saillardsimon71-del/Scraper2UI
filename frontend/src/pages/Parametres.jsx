@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AutopilotCard from "@/components/AutopilotCard";
 import WebhookCard from "@/components/WebhookCard";
+import BackupCard from "@/components/BackupCard";
 
 export default function Parametres() {
   const [form, setForm] = useState({
@@ -99,6 +100,8 @@ export default function Parametres() {
       <AutopilotCard />
 
       <WebhookCard />
+
+      <BackupCard />
 
       <div className="mt-6 bg-white border border-slate-200 rounded-sm p-6">
         <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-semibold text-slate-500 mb-2">

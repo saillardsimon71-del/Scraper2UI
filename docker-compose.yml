@@ -1,0 +1,58 @@
+# Cockpit Prospection - stack complète
+# Usage : docker compose up -d
+# Accès : http://localhost:8080  (frontend)
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: cockpit-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: cockpit-backend
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      DB_NAME: ${DB_NAME:-scraper2ui}
+      CORS_ORIGINS: "*"
+      AI_MODEL: ${AI_MODEL:-gpt-5}
+      EMERGENT_LLM_KEY: ${EMERGENT_LLM_KEY:-}
+      BACKUP_DIR: /app/data/backup
+    volumes:
+      # Backup JSON persistant côté hôte (pour Git ou simple copie)
+      - ./data/backup:/app/data/backup
+    ports:
+      - "8001:8001"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        # URL accessible depuis le navigateur (sera proxiée vers backend)
+        REACT_APP_BACKEND_URL: ${PUBLIC_URL:-http://localhost:8080}
+    container_name: cockpit-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+
+volumes:
+  mongo_data:
+    driver: local
