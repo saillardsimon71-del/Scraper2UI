@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime, timedelta, timezone
 
 from scraper_core import as_str, has_real_website
 
@@ -27,6 +28,9 @@ DEFAULT_SCENARIOS = {
              "template": "Bonjour, {prenom_exp}, spécialiste web. Je n'ai pas trouvé de site pour {entreprise} — aujourd'hui 8 clients sur 10 cherchent leur {metier} sur Google avant d'appeler. Je peux vous montrer en 2 min ce que ça donnerait pour vous ?"},
             {"etape": 3, "delai_jours": 4, "canal": "whatsapp",
              "template": "Bonjour, c'est encore {prenom_exp}. Dernière relance promis : j'ai préparé une idée de site pour {entreprise}, simple et efficace pour récupérer des demandes de devis. Je vous l'envoie ? {lien_rdv}"},
+            {"etape": 4, "delai_jours": 3, "canal": "email",
+             "objet": "Un site pour {entreprise} ? Quelques idées concrètes",
+             "template": "Bonjour,\n\nJe me permets un dernier message, par écrit cette fois : je suis {prenom_exp}, spécialiste web, et je n'ai trouvé aucun site pour {entreprise}.\n\nAujourd'hui, 8 clients sur 10 cherchent leur {metier} sur Google avant d'appeler. Un site simple — vos réalisations, vos avis clients, un formulaire de devis — peut faire une vraie différence sur vos demandes entrantes.\n\nSi vous voulez voir ce que ça donnerait pour vous, on peut en parler 15 minutes : {lien_rdv}\n\nBonne journée,\n{prenom_exp}"},
         ],
     },
     "site_ancien": {
@@ -40,6 +44,9 @@ DEFAULT_SCENARIOS = {
              "template": "Bonjour, {prenom_exp}, spécialiste web. J'ai analysé le site de {entreprise} : note {note_site}/100. Quelques améliorations simples pourraient vous amener nettement plus de demandes de devis. Je vous envoie le détail ?"},
             {"etape": 3, "delai_jours": 4, "canal": "whatsapp",
              "template": "Bonjour, {prenom_exp} à nouveau. Dernier message : j'ai noté 2-3 améliorations concrètes pour {site_web} qui pourraient augmenter vos appels entrants. Ça vous intéresse ? {lien_rdv}"},
+            {"etape": 4, "delai_jours": 3, "canal": "email",
+             "objet": "Quelques pistes concrètes pour le site de {entreprise}",
+             "template": "Bonjour,\n\nJe suis {prenom_exp}, spécialiste web. J'ai analysé {site_web} et je vous écris par email pour vous laisser une trace écrite : {signal}.\n\nQuelques améliorations simples pourraient vous amener nettement plus de demandes de devis — être mieux trouvé sur Google, faciliter l'appel depuis un téléphone, rassurer avec vos réalisations.\n\nSi ça vous intéresse, je vous montre tout en 15 minutes : {lien_rdv}\n\nBonne journée,\n{prenom_exp}"},
         ],
     },
     "signal_chaud": {
@@ -53,6 +60,9 @@ DEFAULT_SCENARIOS = {
              "template": "Bonjour, {prenom_exp} ici. Je vous ai écrit sur WhatsApp au sujet de {entreprise} ({signal}). J'ai déjà quelques pistes concrètes — dispo pour un appel rapide cette semaine ? {lien_rdv}"},
             {"etape": 3, "delai_jours": 3, "canal": "whatsapp",
              "template": "Bonjour, dernier message de ma part. L'opportunité est réelle pour {entreprise} : {signal}. Si le timing est mauvais, dites-le moi simplement et je ne vous relancerai plus. Bonne journée !"},
+            {"etape": 4, "delai_jours": 2, "canal": "email",
+             "objet": "{entreprise} : les pistes dont je vous parlais",
+             "template": "Bonjour,\n\n{prenom_exp} ici, spécialiste web. Je vous ai contacté récemment au sujet de {entreprise} : {signal}.\n\nC'est exactement le genre de moment où une présence web optimisée fait la différence sur les devis. J'ai déjà quelques pistes concrètes à vous montrer.\n\nUn créneau de 15 minutes cette semaine ? {lien_rdv}\n\nBonne journée,\n{prenom_exp}"},
         ],
     },
     "site_moyen": {
@@ -66,6 +76,9 @@ DEFAULT_SCENARIOS = {
              "template": "Bonjour, {prenom_exp}. J'ai audité le site de {entreprise} (note {note_site}/100) : il y a des gains rapides possibles côté visibilité Google et conversion. Je partage l'audit complet si ça vous intéresse."},
             {"etape": 3, "delai_jours": 4, "canal": "whatsapp",
              "template": "Bonjour, {prenom_exp} à nouveau. Je clos mon suivi sur {entreprise} — si améliorer {site_web} devient une priorité, je reste disponible. {lien_rdv}"},
+            {"etape": 4, "delai_jours": 3, "canal": "email",
+             "objet": "Audit de {site_web} : les gains rapides pour {entreprise}",
+             "template": "Bonjour,\n\nJe suis {prenom_exp}, spécialiste web. J'ai audité le site de {entreprise} ({site_web}) : il a du potentiel, et quelques gains rapides sont possibles côté visibilité Google et demandes de devis.\n\nJe vous partage volontiers le détail de l'audit — c'est gratuit et sans engagement.\n\nOn en parle 15 minutes ? {lien_rdv}\n\nBonne journée,\n{prenom_exp}"},
         ],
     },
 }
@@ -76,6 +89,20 @@ STATUT_LABELS = {
     "a_contacter": "À contacter", "repondu": "Répondu", "rdv": "RDV pris",
     "gagne": "Gagné", "perdu": "Perdu", "opt_out": "Opt-out", "epuise": "Séquence épuisée",
 }
+
+
+def advance_updates(p: dict, etapes: list[dict]) -> dict:
+    """Champs à $set après un envoi : étape suivante + date de relance, ou séquence épuisée."""
+    current = int(p.get("etape_relance", 1))
+    updates: dict = {"message_personnalise": "", "derniere_action": f"envoye_etape_{current}"}
+    if current >= len(etapes):
+        updates["statut"] = "epuise"
+    else:
+        next_step = etapes[current]  # index = current (0-based) → étape suivante
+        delai = int(next_step.get("delai_jours", 3))
+        updates["etape_relance"] = current + 1
+        updates["date_prochaine_action"] = (datetime.now(timezone.utc) + timedelta(days=delai)).isoformat()
+    return updates
 
 
 def determine_profil(p: dict) -> str:

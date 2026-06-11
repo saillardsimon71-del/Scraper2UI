@@ -32,8 +32,19 @@ Porter le repo GitHub `saillardsimon71-del/Scraper2UI` (outil Python de prospect
 - Mini-audit IA conversion-friendly (sans note, sans jargon technique, bénéfices client concrets, lien Calendly intégré) — généré depuis la fiche prospect, stocké, copiable, envoyable sur WhatsApp en 1 clic, inclus dans l'export Excel
 - Settings configurés : prenom_expediteur=Simon, lien_rdv=https://calendly.com/sitequivend/30min
 
+## Implémenté — Itération 3 (11/06/2026) : Pilote automatique emails (porté du scraper de base), testé e2e (envoi réel SendGrid réussi)
+- `backend/autopilot.py` : boucle de fond (toutes les 5 min) qui envoie automatiquement les étapes **email** des séquences aux prospects dus (relances auto incluses), porté du `campaign_manager.py` du repo Scraper
+- Garde-fous : quota journalier (50 par défaut), plage horaire Europe/Paris (9h–18h), jours ouvrés, arrêt auto si répondu/opt-out (statut pipeline), footer désinscription "répondez STOP"
+- Endpoints : `GET /api/autopilot/status`, `POST /api/autopilot/run` (passage manuel forcé), `GET /api/autopilot/log` ; settings étendus (autopilot_actif, quota, heures, jours ouvrés)
+- Journal des envois persisté dans `db.email_log` (auto + manuels) ; historique prospect type "envoye" canal "email" auto=True (compté dans les stats)
+- Séquences par défaut : étape 4 **email** ajoutée aux 4 profils (objet + template longs, variables incluses)
+- Frontend : carte "Pilote automatique" dans Paramètres (`AutopilotCard.jsx`) — interrupteur ACTIF/INACTIF, badges quota/en attente/raison de pause, réglages, bouton "Lancer un passage maintenant", journal des 20 derniers envois
+- Refactor : `advance_updates()` partagé (action manuelle "envoyé" + autopilot) ; `send_email_sync` mutualisé
+- Config : clé SendGrid + expéditeur simon@sitequivend.fr enregistrés, pilote ACTIVÉ, lien_rdv Calendly restauré
+- Test réel : email envoyé avec succès via SendGrid à simon@sitequivend.fr (statut 202), séquence avancée → épuisé, log OK
+
 ## Backlog priorisé
-- P1 : clé SendGrid à fournir par l'utilisateur pour activer l'envoi email réel (fallback mailto fonctionne sans)
+- P2 : webhook SendGrid réception réponses (auto-marquage "répondu"/désabonné comme dans le scraper de base)
 - P2 : sync Google Sheets ; PDF audit ; rate limiting IA ; redaction clés API dans GET /settings
 - P2 : fallback non-drag&drop sur kanban (sélecteur de statut sur carte)
 

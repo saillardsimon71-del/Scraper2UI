@@ -23,13 +23,17 @@ from starlette.middleware.cors import CORSMiddleware
 
 from prospection import (
     DEFAULT_SCENARIOS, PROFIL_LABELS, PROFILS, STATUT_LABELS,
-    determine_profil, render_message,
+    advance_updates, determine_profil, render_message,
 )
 from scraper_core import (
     METIERS, USER_AGENT, as_str, audit_site, build_linkedin_link, build_wa_link,
     compute_score, discover_gouv, discover_osm, enrich_phone, has_real_website,
     niveau_from_score, normalize_company_name, normalize_french_phone,
     phone_digits, resolve_site_web, serper_find_site,
+)
+from autopilot import (
+    autopilot_loop, count_sent_today, eligible_prospects, in_window,
+    run_tick, send_email_sync,
 )
 
 ROOT_DIR = Path(__file__).parent
@@ -93,6 +97,11 @@ class SettingsUpdate(BaseModel):
     serper_api_key: Optional[str] = None
     sendgrid_api_key: Optional[str] = None
     email_expediteur: Optional[str] = None
+    autopilot_actif: Optional[bool] = None
+    autopilot_quota_jour: Optional[int] = None
+    autopilot_heure_debut: Optional[int] = None
+    autopilot_heure_fin: Optional[int] = None
+    autopilot_jours_ouvres: Optional[bool] = None
 
 
 class EtapeModel(BaseModel):
@@ -319,17 +328,7 @@ async def prospect_action(prospect_id: str, body: ActionRequest):
 
     if action == "envoye":
         scenario = await get_scenario(p.get("profil", "site_moyen"))
-        etapes = scenario.get("etapes", [])
-        current = int(p.get("etape_relance", 1))
-        if current >= len(etapes):
-            updates["statut"] = "epuise"
-        else:
-            next_step = etapes[current]  # index = current (0-based) → étape suivante
-            delai = int(next_step.get("delai_jours", 3))
-            updates["etape_relance"] = current + 1
-            updates["date_prochaine_action"] = (datetime.now(timezone.utc) + timedelta(days=delai)).isoformat()
-        updates["message_personnalise"] = ""
-        updates["derniere_action"] = f"envoye_etape_{current}"
+        updates.update(advance_updates(p, scenario.get("etapes", [])))
     elif action == "skip":
         updates["date_prochaine_action"] = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
     elif action in ("repondu", "rdv", "gagne", "perdu", "opt_out"):
@@ -710,16 +709,6 @@ async def export_prospects(q: str = "", statut: str = "", niveau: str = "", prof
 
 # ============================================================ Email (SendGrid)
 
-def _send_email_sync(api_key: str, sender: str, to: str, subject: str, body: str) -> int:
-    from sendgrid import SendGridAPIClient
-    from sendgrid.helpers.mail import Mail
-    html = body.replace("\n", "<br>")
-    message = Mail(from_email=sender, to_emails=to, subject=subject, html_content=html)
-    sg = SendGridAPIClient(api_key)
-    resp = sg.send(message)
-    return resp.status_code
-
-
 @api_router.post("/email/send")
 async def email_send(body: EmailSendRequest):
     settings = await get_settings()
@@ -734,16 +723,61 @@ async def email_send(body: EmailSendRequest):
     if not to:
         raise HTTPException(400, "Pas d'adresse email pour ce prospect")
     try:
-        status = await asyncio.to_thread(_send_email_sync, key, sender, to, body.subject, body.message)
+        status = await asyncio.to_thread(
+            send_email_sync, key, sender, as_str(settings.get("prenom_expediteur")),
+            to, body.subject, body.message)
     except Exception as e:
         raise HTTPException(502, f"Erreur SendGrid : {e}")
     if status not in (200, 201, 202):
         raise HTTPException(502, f"SendGrid a répondu {status}")
+    await db.email_log.insert_one({
+        "id": str(uuid.uuid4()), "prospect_id": body.prospect_id,
+        "entreprise": as_str(p.get("entreprise")), "destinataire": to,
+        "objet": body.subject, "etape": p.get("etape_relance", 1),
+        "auto": False, "statut": "envoye", "date": now_iso()})
     await db.prospects.update_one(
         {"id": body.prospect_id},
         {"$push": {"historique": {"type": "email_envoye", "date": now_iso(),
                                   "etape": p.get("etape_relance", 1)}}})
     return {"ok": True, "to": to}
+
+
+# ============================================================ Pilote automatique
+
+@api_router.get("/autopilot/status")
+async def autopilot_status():
+    settings = await get_settings()
+    actif = bool(settings.get("autopilot_actif"))
+    configure = bool(as_str(settings.get("sendgrid_api_key")) and as_str(settings.get("email_expediteur")))
+    quota = int(settings.get("autopilot_quota_jour", 50) or 50)
+    deja = await count_sent_today(db)
+    candidats = await eligible_prospects(db)
+    fenetre_ok, raison_fenetre = in_window(settings)
+    raison_pause = ""
+    if not actif:
+        raison_pause = "Pilote automatique désactivé"
+    elif not configure:
+        raison_pause = "SendGrid non configuré (clé ou email expéditeur manquant)"
+    elif deja >= quota:
+        raison_pause = f"Quota journalier atteint ({deja}/{quota})"
+    elif not fenetre_ok:
+        raison_pause = raison_fenetre
+    return {"actif": actif, "configure": configure,
+            "envoyes_aujourdhui": deja, "quota": quota,
+            "en_attente": len(candidats), "fenetre_ok": fenetre_ok,
+            "raison_pause": raison_pause}
+
+
+@api_router.post("/autopilot/run")
+async def autopilot_run():
+    """Déclenchement manuel d'un passage (ignore l'interrupteur et la plage horaire)."""
+    return await run_tick(db, force=True)
+
+
+@api_router.get("/autopilot/log")
+async def autopilot_log(limit: int = 50):
+    items = await db.email_log.find({}, {"_id": 0}).sort("date", -1).limit(limit).to_list(limit)
+    return {"items": items}
 
 
 # ============================================================ Paramètres
@@ -755,7 +789,12 @@ async def read_settings():
             "lien_rdv": s.get("lien_rdv", ""),
             "serper_api_key": s.get("serper_api_key", ""),
             "sendgrid_api_key": s.get("sendgrid_api_key", ""),
-            "email_expediteur": s.get("email_expediteur", "")}
+            "email_expediteur": s.get("email_expediteur", ""),
+            "autopilot_actif": bool(s.get("autopilot_actif", False)),
+            "autopilot_quota_jour": int(s.get("autopilot_quota_jour", 50) or 50),
+            "autopilot_heure_debut": int(s.get("autopilot_heure_debut", 9) or 0),
+            "autopilot_heure_fin": int(s.get("autopilot_heure_fin", 18) or 24),
+            "autopilot_jours_ouvres": bool(s.get("autopilot_jours_ouvres", True))}
 
 
 @api_router.put("/settings")
@@ -789,6 +828,8 @@ async def seed():
                                       "lien_rdv": "", "serper_api_key": ""})
     await db.prospects.create_index("id", unique=True)
     await db.prospects.create_index([("statut", 1), ("date_prochaine_action", 1)])
+    await db.email_log.create_index([("date", -1)])
+    asyncio.create_task(autopilot_loop(db))
 
 
 @app.on_event("shutdown")

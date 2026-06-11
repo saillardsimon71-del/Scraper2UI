@@ -4,6 +4,7 @@ import { FloppyDisk, Sparkle } from "@phosphor-icons/react";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import AutopilotCard from "@/components/AutopilotCard";
 
 export default function Parametres() {
   const [form, setForm] = useState({
@@ -20,7 +21,7 @@ export default function Parametres() {
   };
 
   return (
-    <div className="p-8 fade-up max-w-xl">
+    <div className="p-8 fade-up max-w-2xl">
       <h1 className="text-4xl tracking-tighter font-bold text-[#111111]">Paramètres</h1>
       <p className="text-sm text-slate-500 mt-1 mb-8">Identité d'expéditeur, lien de RDV et clés API.</p>
 
@@ -93,6 +94,8 @@ export default function Parametres() {
           <FloppyDisk size={16} className="mr-2" /> Enregistrer
         </Button>
       </div>
+
+      <AutopilotCard />
 
       <div className="mt-6 bg-white border border-slate-200 rounded-sm p-6">
         <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-semibold text-slate-500 mb-2">
