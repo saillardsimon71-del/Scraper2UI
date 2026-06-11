@@ -71,6 +71,20 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
     }
   };
 
+  const generateMiniAudit = async () => {
+    setAuditLoading(true);
+    try {
+      const res = await api.post("/ai/mini-audit", { prospect_id: prospectId });
+      setMiniAudit(res.data.mini_audit);
+      setAuditWaLink(res.data.wa_link || "");
+      toast.success("Mini-audit généré — prêt à envoyer");
+    } catch {
+      toast.error("Erreur IA — réessayez");
+    } finally {
+      setAuditLoading(false);
+    }
+  };
+
   const saveDraft = async () => {
     await api.patch(`/prospects/${prospectId}`, { message_personnalise: draft });
     toast.success("Message personnalisé enregistré pour ce prospect");
@@ -94,7 +108,10 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
     <Sheet open={!!prospectId} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="w-[520px] sm:max-w-[520px] overflow-y-auto rounded-none p-0">
         {!p ? (
-          <div className="p-8 text-sm text-slate-400">Chargement…</div>
+          <div className="p-8 text-sm text-slate-400">
+            <SheetTitle className="sr-only">Chargement du prospect</SheetTitle>
+            Chargement…
+          </div>
         ) : (
           <div>
             <SheetHeader className="px-6 pt-6 pb-4 border-b border-slate-200">

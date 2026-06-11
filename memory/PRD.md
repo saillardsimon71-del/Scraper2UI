@@ -25,12 +25,17 @@ Porter le repo GitHub `saillardsimon71-del/Scraper2UI` (outil Python de prospect
 - Sheet détail prospect : audit, signaux, message éditable, amélioration IA, séquence complète, historique
 - Paramètres : prénom expéditeur, lien RDV, clé Serper
 
+## Implémenté — Itération 2 (11/06/2026), testé (iteration_2 : backend 100%, bug generateMiniAudit corrigé + vérifié)
+- Export Excel des prospects (filtres respectés) — bouton sur page Prospects
+- Canal email : SendGrid (clé + sender dans Paramètres, fallback mailto sans clé), étapes de séquence avec canal email + objet, bouton email dans la file du jour
+- Vue Pipeline kanban (drag & drop entre statuts) + stats de réponse par scénario (contactés/réponses/RDV/taux par profil)
+- Mini-audit IA conversion-friendly (sans note, sans jargon technique, bénéfices client concrets, lien Calendly intégré) — généré depuis la fiche prospect, stocké, copiable, envoyable sur WhatsApp en 1 clic, inclus dans l'export Excel
+- Settings configurés : prenom_expediteur=Simon, lien_rdv=https://calendly.com/sitequivend/30min
+
 ## Backlog priorisé
-- P1 : afficher toast d'erreur IA plus visible ; a11y DialogTitle dans Sheet ; cache scénarios (N+1 queue)
-- P1 : export Excel/CSV des prospects depuis le cockpit
-- P2 : emails (SendGrid) comme 3e canal ; sync Google Sheets ; PDF audit individuel à joindre aux messages
-- P2 : vue kanban du pipeline ; statistiques par scénario (taux de réponse par profil)
-- P2 : rate limiting /api/ai/improve, cap taille import
+- P1 : clé SendGrid à fournir par l'utilisateur pour activer l'envoi email réel (fallback mailto fonctionne sans)
+- P2 : sync Google Sheets ; PDF audit ; rate limiting IA ; redaction clés API dans GET /settings
+- P2 : fallback non-drag&drop sur kanban (sélecteur de statut sur carte)
 
 ## Notes techniques
 - API gouv (recherche-entreprises.api.gouv.fr) : gratuite sans clé. OSM/Overpass : gratuit, parfois lent.
