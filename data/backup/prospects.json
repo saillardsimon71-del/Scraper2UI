@@ -556,6 +556,14 @@
         "sendgrid_status": "delivered",
         "source": "sendgrid_reimport",
         "type": "envoye"
+      },
+      {
+        "action": "repondu",
+        "date": "2026-06-10T19:57:44+00:00",
+        "extrait": "Bonjour,\n\nVoici le formulaire à compléter :\n\nFaire affaire avec la Ville | Site officiel de la Ville de Trois-Rivières<https://www.v3r.net/affaires/faire-affaire-avec-la-ville>\n\nMerci et bonne journée,\n\nStéphanie\nPréposée service à la clientèle * Bureau du service client 311\nTél. : 311 ou 819 374-20",
+        "objet": "RE: Collaboration Tardif",
+        "source": "imap",
+        "type": "reponse_email"
       }
     ],
     "id": "13f2b820-a3c8-494c-a0eb-26274713da27",
@@ -571,13 +579,14 @@
     "opportunites": "",
     "profil": "pas_de_site",
     "qualite_site": "",
+    "reply_action": "repondu",
     "score_conversion": 32,
     "signal_principal": "",
     "signaux_conversion": "",
     "siren": "",
     "site_web": "",
     "source": "sendgrid_reimport",
-    "statut": "a_contacter",
+    "statut": "repondu",
     "tel_digits": "",
     "telephone": "",
     "ville": ""

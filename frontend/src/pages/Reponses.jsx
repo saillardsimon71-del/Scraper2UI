@@ -30,15 +30,22 @@ export default function Reponses() {
   const [sinceDays, setSinceDays] = useState(30);
   const [lastSync, setLastSync] = useState(null);
   const [settings, setSettings] = useState(null);
+  const [showOrphans, setShowOrphans] = useState(false);
+  const [totals, setTotals] = useState({ total_all: 0, total_linked: 0, total_orphans: 0 });
 
   const load = async () => {
     setLoading(true);
     try {
       const [r, s] = await Promise.all([
-        api.get("/replies?limit=200"),
+        api.get(`/replies?limit=300&only_linked=${showOrphans ? "false" : "true"}`),
         api.get("/settings"),
       ]);
       setReplies(r.data.items || []);
+      setTotals({
+        total_all: r.data.total_all || 0,
+        total_linked: r.data.total_linked || 0,
+        total_orphans: r.data.total_orphans || 0,
+      });
       setSettings(s.data);
     } catch (e) {
       console.error(e);
@@ -47,15 +54,19 @@ export default function Reponses() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [showOrphans]);
 
   const sync = async () => {
     setSyncing(true);
     try {
-      const res = await api.post("/inbox/sync", { since_days: sinceDays, dry_run: false });
+      const res = await api.post("/inbox/sync", {
+        since_days: sinceDays,
+        dry_run: false,
+        prospects_only: true,
+      });
       setLastSync(res.data);
       toast.success(
-        `${res.data.linked} liées · ${res.data.orphans} orphelines · ${res.data.already_imported} déjà connues`
+        `${res.data.linked} réponses prospects · ${res.data.ignored_non_prospect} mails non-prospects ignorés`
       );
       await load();
     } catch (e) {
@@ -127,20 +138,20 @@ export default function Reponses() {
         {lastSync && (
           <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs">
             <div className="bg-white border border-emerald-200 rounded-sm py-2">
-              <div className="font-heading text-xl font-bold tabular-nums text-slate-700">{lastSync.messages_read}</div>
-              <div className="text-[10px] uppercase text-slate-400">Mails lus</div>
-            </div>
-            <div className="bg-white border border-emerald-200 rounded-sm py-2">
               <div className="font-heading text-xl font-bold tabular-nums text-emerald-600">{lastSync.linked}</div>
-              <div className="text-[10px] uppercase text-slate-400">Liées</div>
+              <div className="text-[10px] uppercase text-slate-400">Prospects</div>
             </div>
             <div className="bg-white border border-emerald-200 rounded-sm py-2">
-              <div className="font-heading text-xl font-bold tabular-nums text-amber-600">{lastSync.orphans}</div>
-              <div className="text-[10px] uppercase text-slate-400">Orphelines</div>
+              <div className="font-heading text-xl font-bold tabular-nums text-slate-400">{lastSync.ignored_non_prospect}</div>
+              <div className="text-[10px] uppercase text-slate-400">Ignorés (non-prospects)</div>
             </div>
             <div className="bg-white border border-emerald-200 rounded-sm py-2">
               <div className="font-heading text-xl font-bold tabular-nums text-slate-500">{lastSync.already_imported}</div>
               <div className="text-[10px] uppercase text-slate-400">Déjà connues</div>
+            </div>
+            <div className="bg-white border border-emerald-200 rounded-sm py-2">
+              <div className="font-heading text-xl font-bold tabular-nums text-slate-700">{lastSync.messages_read}</div>
+              <div className="text-[10px] uppercase text-slate-400">Mails lus</div>
             </div>
           </div>
         )}
@@ -148,20 +159,37 @@ export default function Reponses() {
 
       {/* Liste des réponses */}
       <div className="bg-white border border-slate-200 rounded-sm">
-        <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+        <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
           <div className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-500 flex items-center gap-2">
-            <EnvelopeOpen size={14} /> {replies.length} réponse{replies.length > 1 ? "s" : ""}
+            <EnvelopeOpen size={14} />
+            {replies.length} {showOrphans ? "réponse" : "réponse prospect"}{replies.length > 1 ? "s" : ""}
+            {totals.total_orphans > 0 && !showOrphans && (
+              <span className="text-slate-400 normal-case tracking-normal font-normal">
+                · {totals.total_orphans} mail{totals.total_orphans > 1 ? "s" : ""} non-prospect{totals.total_orphans > 1 ? "s" : ""} masqué{totals.total_orphans > 1 ? "s" : ""}
+              </span>
+            )}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={load}
-            disabled={loading}
-            className="rounded-sm text-xs"
-          >
-            <ArrowsClockwise size={14} className={`mr-1 ${loading ? "animate-spin" : ""}`} />
-            Actualiser
-          </Button>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showOrphans}
+                onChange={(e) => setShowOrphans(e.target.checked)}
+                className="w-4 h-4 accent-[#002FA7]"
+              />
+              Afficher aussi les non-prospects
+            </label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={load}
+              disabled={loading}
+              className="rounded-sm text-xs"
+            >
+              <ArrowsClockwise size={14} className={`mr-1 ${loading ? "animate-spin" : ""}`} />
+              Actualiser
+            </Button>
+          </div>
         </div>
         {replies.length === 0 ? (
           <div className="py-16 text-center">

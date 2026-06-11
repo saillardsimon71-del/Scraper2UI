@@ -1161,10 +1161,22 @@ async def import_replies_from_sendgrid(body: RepliesImportRequest):
 
 
 @api_router.get("/replies")
-async def list_replies(limit: int = 100):
-    """Liste les réponses (liées et orphelines), les plus récentes en premier."""
-    items = await db.reponses.find({}, {"_id": 0}).sort("date", -1).limit(limit).to_list(limit)
-    return {"items": items, "count": len(items)}
+async def list_replies(limit: int = 200, only_linked: bool = True):
+    """Liste les réponses, les plus récentes en premier.
+
+    only_linked=True (par défaut) : ne renvoie que les réponses liées à un prospect.
+    """
+    query = {"prospect_id": {"$ne": None}} if only_linked else {}
+    items = await db.reponses.find(query, {"_id": 0}).sort("date", -1).limit(limit).to_list(limit)
+    total_all = await db.reponses.count_documents({})
+    total_linked = await db.reponses.count_documents({"prospect_id": {"$ne": None}})
+    return {
+        "items": items,
+        "count": len(items),
+        "total_all": total_all,
+        "total_linked": total_linked,
+        "total_orphans": total_all - total_linked,
+    }
 
 
 # ============================================================ Boîte mail IMAP
@@ -1172,6 +1184,7 @@ async def list_replies(limit: int = 100):
 class InboxSyncRequest(BaseModel):
     since_days: int = 30
     dry_run: bool = False
+    prospects_only: bool = True  # n'enregistre que les réponses liées à un prospect
 
 
 @api_router.post("/inbox/test")
@@ -1211,20 +1224,33 @@ async def inbox_sync(body: InboxSyncRequest):
     summary = {
         "messages_read": len(messages),
         "linked": 0,           # réponses liées à un prospect
-        "orphans": 0,          # réponses sans prospect correspondant
+        "orphans": 0,          # réponses sans prospect correspondant (non enregistrées si prospects_only=True)
+        "ignored_non_prospect": 0,  # nb de mails non-prospects ignorés
         "already_imported": 0,
         "prospects_updated": 0,
         "details": [],
     }
 
     if body.dry_run:
-        summary["details"] = [{
-            "from_email": m["from_email"],
-            "from_name": m["from_name"],
-            "subject": m["subject"],
-            "date": m["date"],
-            "excerpt": m["body_excerpt"],
-        } for m in messages[:30]]
+        # Pour le dry-run, on annote chaque mail avec si oui ou non c'est un prospect
+        details = []
+        for m in messages[:50]:
+            p = await db.prospects.find_one(
+                {"email": {"$regex": f"^{re.escape(m['from_email'])}$", "$options": "i"}},
+                {"_id": 0, "id": 1, "entreprise": 1},
+            ) if m['from_email'] else None
+            details.append({
+                "from_email": m["from_email"],
+                "from_name": m["from_name"],
+                "subject": m["subject"],
+                "date": m["date"],
+                "excerpt": m["body_excerpt"],
+                "is_prospect": bool(p),
+                "entreprise": p.get("entreprise") if p else "",
+            })
+        summary["details"] = details
+        summary["would_link"] = sum(1 for d in details if d["is_prospect"])
+        summary["would_ignore"] = sum(1 for d in details if not d["is_prospect"])
         return summary
 
     for m in messages:
@@ -1244,6 +1270,12 @@ async def inbox_sync(body: InboxSyncRequest):
                 {"email": {"$regex": f"^{re.escape(from_email)}$", "$options": "i"}},
                 {"_id": 0, "id": 1, "entreprise": 1, "statut": 1},
             )
+
+            # Si on filtre, ignorer les non-prospects (les newsletters, factures, perso, etc.)
+            if body.prospects_only and not p:
+                summary["ignored_non_prospect"] += 1
+                continue
+
             action = classify(m["body"], m["subject"])
             now = datetime.now(timezone.utc).isoformat()
             reponse_doc = {
