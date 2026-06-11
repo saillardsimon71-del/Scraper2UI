@@ -117,6 +117,12 @@ class SettingsUpdate(BaseModel):
     autopilot_heure_debut: Optional[int] = None
     autopilot_heure_fin: Optional[int] = None
     autopilot_jours_ouvres: Optional[bool] = None
+    # IMAP : lecture des réponses reçues dans la boîte mail
+    imap_host: Optional[str] = None
+    imap_port: Optional[int] = None
+    imap_user: Optional[str] = None
+    imap_password: Optional[str] = None
+    imap_folder: Optional[str] = None
 
 
 class EtapeModel(BaseModel):

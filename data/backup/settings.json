@@ -2,6 +2,7 @@
   {
     "_id": "global",
     "email_expediteur": "simon@sitequivend.fr",
+    "email_reponse": "simon@sitequivend.fr",
     "migration_canal_unique": true,
     "prenom_expediteur": "Simon",
     "sendgrid_api_key": "***REDACTED***",
