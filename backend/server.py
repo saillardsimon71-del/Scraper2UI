@@ -38,6 +38,10 @@ from autopilot import (
 from backup import (
     backup_loop, backup_status, dump_db, restore_db, restore_if_empty,
 )
+from sendgrid_import import (
+    aggregate_by_recipient, fetch_sent_messages, _entreprise_from_email_or_subject,
+    _extract_site_from_subject,
+)
 from webhook import create_router as create_webhook_router
 
 ROOT_DIR = Path(__file__).parent
@@ -907,6 +911,129 @@ async def write_settings(body: SettingsUpdate):
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     await db.settings.update_one({"_id": "global"}, {"$set": updates}, upsert=True)
     return await read_settings()
+
+
+# ============================================================ Import depuis SendGrid
+
+class SendgridImportRequest(BaseModel):
+    since_days: int = 30
+    dry_run: bool = False
+    mark_step1_sent: bool = True  # marquer l'étape 1 comme déjà envoyée → autopilot programmera l'étape 2
+
+
+@api_router.post("/import/sendgrid")
+async def import_from_sendgrid(body: SendgridImportRequest):
+    """Réimporte les prospects depuis l'historique d'envoi SendGrid.
+
+    Lit la clé API et l'email expéditeur depuis les settings. Récupère tous les
+    envois récents via /v3/messages, dédoublonne par destinataire, crée les
+    prospects manquants avec canal=email et marque l'étape 1 comme envoyée
+    (autopilot prendra le relais pour l'étape 2).
+    """
+    s = await get_settings()
+    api_key = s.get("sendgrid_api_key", "")
+    from_email = s.get("email_expediteur", "")
+    if not api_key or not from_email:
+        raise HTTPException(
+            status_code=400,
+            detail="Clé SendGrid et email expéditeur requis dans Paramètres.",
+        )
+
+    messages = await fetch_sent_messages(api_key, from_email, since_days=body.since_days)
+    by_recipient = aggregate_by_recipient(messages, self_email=from_email)
+
+    summary = {
+        "messages_fetched": len(messages),
+        "unique_recipients": len(by_recipient),
+        "created": 0,
+        "skipped_existing": 0,
+        "errors": 0,
+        "preview": [],  # 10 premiers prospects à créer (pour dry-run)
+    }
+
+    if body.dry_run:
+        preview = []
+        for to_email, m in list(by_recipient.items())[:10]:
+            preview.append({
+                "email": to_email,
+                "entreprise": _entreprise_from_email_or_subject(to_email, m.get("subject", "")),
+                "site_web": _extract_site_from_subject(m.get("subject", "")),
+                "last_event": m.get("last_event_time"),
+                "subject": m.get("subject"),
+                "opens": m.get("opens_count", 0),
+                "clicks": m.get("clicks_count", 0),
+                "status": m.get("status"),
+            })
+        summary["preview"] = preview
+        return summary
+
+    settings_data = s
+    scenario = await get_scenario("site_moyen")  # par défaut, ajusté ensuite si audit
+    etapes_default = scenario.get("etapes", [])
+
+    for to_email, m in by_recipient.items():
+        try:
+            # Skip si email déjà en base
+            existing = await db.prospects.find_one({"email": to_email}, {"_id": 0, "id": 1})
+            if existing:
+                summary["skipped_existing"] += 1
+                continue
+
+            subject = m.get("subject", "")
+            site = _extract_site_from_subject(subject)
+            entreprise = _entreprise_from_email_or_subject(to_email, subject)
+            last_event = m.get("last_event_time", "")  # ex "2026-06-11T21:56:11Z"
+
+            raw = {
+                "entreprise": entreprise,
+                "email": to_email,
+                "site_web": site,
+                "source": "sendgrid_reimport",
+            }
+            p = prepare_new_prospect(raw)
+            p["canal_contact"] = "email"
+
+            # Construire l'historique : étape 1 envoyée à `last_event`
+            historique_entry = {
+                "type": "envoye",
+                "date": last_event,
+                "etape": 1,
+                "canal": "email",
+                "objet": subject,
+                "message": "",
+                "source": "sendgrid_reimport",
+                "opens": int(m.get("opens_count", 0) or 0),
+                "clicks": int(m.get("clicks_count", 0) or 0),
+                "sendgrid_msg_id": m.get("msg_id"),
+                "sendgrid_status": m.get("status"),
+            }
+            p["historique"] = [historique_entry]
+
+            if body.mark_step1_sent and etapes_default:
+                # Programmer l'étape 2 à last_event + delai_jours[1]
+                step2 = etapes_default[1] if len(etapes_default) > 1 else None
+                if step2:
+                    delai = int(step2.get("delai_jours", 3))
+                    base_dt = datetime.fromisoformat(last_event.replace("Z", "+00:00"))
+                    p["etape_relance"] = 2
+                    p["date_prochaine_action"] = (base_dt + timedelta(days=delai)).isoformat()
+                else:
+                    p["statut"] = "epuise"
+                p["derniere_action"] = "envoye_etape_1"
+
+            await db.prospects.insert_one(p)
+            summary["created"] += 1
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Import SendGrid : erreur sur %s (%s)", to_email, exc)
+            summary["errors"] += 1
+
+    # Dump immédiat pour sécuriser la réimportation
+    try:
+        await dump_db(db)
+    except Exception:  # noqa: BLE001
+        pass
+
+    return summary
 
 
 # ============================================================ Sauvegarde / restauration
