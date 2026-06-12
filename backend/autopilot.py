@@ -31,14 +31,26 @@ def send_email_sync(api_key: str, sender: str, sender_name: str, to: str, subjec
                     reply_to: str = "") -> int:
     from sendgrid import SendGridAPIClient
     from sendgrid.helpers.mail import Mail
+    from python_http_client.exceptions import HTTPError as SgHTTPError
     html = body.replace("\n", "<br>")
     from_email = (sender, sender_name) if sender_name else sender
     message = Mail(from_email=from_email, to_emails=to, subject=subject, html_content=html)
     if reply_to:
         message.reply_to = reply_to
     sg = SendGridAPIClient(api_key)
-    resp = sg.send(message)
-    return resp.status_code
+    try:
+        resp = sg.send(message)
+        return resp.status_code
+    except SgHTTPError as e:
+        # SendGrid renvoie un JSON avec la raison précise — on l'expose
+        detail = ""
+        try:
+            body_bytes = getattr(e, "body", b"") or b""
+            detail = body_bytes.decode("utf-8", "ignore") if isinstance(body_bytes, (bytes, bytearray)) else str(body_bytes)
+        except Exception:
+            detail = ""
+        status = getattr(e, "status_code", "?")
+        raise RuntimeError(f"SendGrid {status} — {detail or 'voir SendGrid Activity'}") from None
 
 
 def now_iso() -> str:
