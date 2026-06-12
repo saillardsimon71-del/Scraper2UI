@@ -191,19 +191,19 @@ export default function Prospects() {
                     {p.score_conversion}
                   </Badge>
                 </td>
-                <td className="px-4 py-2.5 font-medium text-[#111111] max-w-56 truncate">{p.entreprise}</td>
+                <td className="px-4 py-2.5 font-medium text-[#111111] max-w-56">
+                  <div className="truncate">{p.entreprise}</div>
+                  {p.label_vendabilite && (
+                    <div className="text-[10px] text-amber-700 mt-0.5">{p.label_vendabilite}</div>
+                  )}
+                </td>
                 <td className="px-4 py-2.5 text-slate-600">{p.metier} · {p.ville}</td>
                 <td className="px-4 py-2.5 text-slate-600 tabular-nums">
                   {p.site_web && p.site_web !== "Pas de site" ? `${p.note_site}/100` : "—"}
                 </td>
                 <td className="px-4 py-2.5 text-slate-600">{PROFIL_LABELS[p.profil] || p.profil}</td>
-                <td
-                  className="px-4 py-2.5"
-                  data-testid="cell-canal"
-                  title={p.canal_contact === "linkedin"
-                    ? "Seul contact : LinkedIn — probablement hors cible artisan (PME / franchise ?)"
-                    : p.canal_contact}
-                >
+                <td className="px-4 py-2.5" data-testid="cell-canal"
+                  title={p.canal_contact === "linkedin" ? "Seul contact : LinkedIn — probablement hors cible artisan" : p.canal_contact}>
                   <span className="inline-flex items-center gap-1">
                     {CANAL_ICONS[p.canal_contact] || "—"}
                     {p.canal_contact === "linkedin" && (
@@ -215,6 +215,12 @@ export default function Prospects() {
                   <Badge variant="outline" className={`rounded-sm text-[11px] ${STATUT_STYLES[p.statut] || ""}`}>
                     {STATUT_LABELS[p.statut] || p.statut}
                   </Badge>
+                  {p.statut === "gagne" && p.ca_contrat > 0 && (
+                    <div className="text-[10px] text-emerald-600 mt-0.5 font-mono">{p.ca_contrat.toLocaleString("fr-FR")} €</div>
+                  )}
+                  {p.statut === "perdu" && p.raison_refus && (
+                    <div className="text-[10px] text-slate-400 mt-0.5 truncate max-w-24" title={p.raison_refus}>{p.raison_refus}</div>
+                  )}
                 </td>
                 <td className="px-4 py-2.5 font-mono text-xs" data-testid="cell-sequence">
                   {p.statut === "a_contacter" && p.etape_relance > 1 ? (
@@ -224,13 +230,7 @@ export default function Prospects() {
                   )}
                 </td>
                 <td className="px-4 py-2.5 text-right">
-                  <Button
-                    data-testid="btn-delete-prospect"
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 w-7 p-0 text-slate-300 hover:text-red-500"
-                    onClick={(e) => remove(e, p.id)}
-                  >
+                  <Button data-testid="btn-delete-prospect" size="sm" variant="ghost" className="h-7 w-7 p-0 text-slate-300 hover:text-red-500" onClick={(e) => remove(e, p.id)}>
                     <Trash size={14} />
                   </Button>
                 </td>

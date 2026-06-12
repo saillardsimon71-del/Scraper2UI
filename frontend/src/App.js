@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import Layout from "@/components/Layout";
 import FileDuJour from "@/pages/FileDuJour";
+import Business from "@/pages/Business";
 import Prospects from "@/pages/Prospects";
 import Pipeline from "@/pages/Pipeline";
 import Reponses from "@/pages/Reponses";
@@ -19,6 +20,7 @@ function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<FileDuJour />} />
+            <Route path="/business" element={<Business />} />
             <Route path="/prospects" element={<Prospects />} />
             <Route path="/pipeline" element={<Pipeline />} />
             <Route path="/reponses" element={<Reponses />} />

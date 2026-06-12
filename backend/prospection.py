@@ -234,6 +234,17 @@ def render_message(template: str, prospect: dict, settings: dict) -> str:
     """Remplit les variables du template. Les variables manquantes sont retirées proprement."""
     signal = as_str(prospect.get("signal_principal")) or as_str(prospect.get("qualite_site")) or "votre présence en ligne mérite mieux"
     site = prospect.get("site_web", "")
+
+    # Argument de vente personnalisé basé sur l'analyse du site
+    pitch = as_str(prospect.get("pitch_vendabilite"))
+    raisons = prospect.get("raisons_vendabilite") or []
+    if isinstance(raisons, list) and raisons:
+        argument_vente = raisons[0].lower()
+    elif pitch:
+        argument_vente = pitch
+    else:
+        argument_vente = signal.lower() if signal else "votre site mérite mieux"
+
     variables = {
         "entreprise": as_str(prospect.get("entreprise")),
         "nom": as_str(prospect.get("nom")) or as_str(prospect.get("entreprise")),
@@ -241,6 +252,8 @@ def render_message(template: str, prospect: dict, settings: dict) -> str:
         "metier": as_str(prospect.get("metier")) or "artisan",
         "site_web": site if has_real_website(site) else "",
         "signal": signal.lower() if signal else "",
+        "argument_vente": argument_vente,
+        "pitch": pitch,
         "note_site": str(prospect.get("note_site", 0) or 0),
         "prenom_exp": as_str(settings.get("prenom_expediteur")) or "Simon",
         "lien_rdv": as_str(settings.get("lien_rdv")),

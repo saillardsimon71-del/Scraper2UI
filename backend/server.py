@@ -28,7 +28,7 @@ from prospection import (
 )
 from scraper_core import (
     METIERS, USER_AGENT, as_str, audit_site, build_linkedin_link, build_wa_link,
-    compute_score, discover_gouv, discover_osm, enrich_email, enrich_phone,
+    compute_score, compute_site_vendabilite, discover_gouv, discover_osm, enrich_email, enrich_phone,
     has_real_website, niveau_from_score, normalize_company_name,
     normalize_french_phone, phone_digits, resolve_site_web, serper_find_site,
 )
@@ -85,7 +85,10 @@ class ScrapeRequest(BaseModel):
 
 
 class ActionRequest(BaseModel):
-    type: str  # envoye | repondu | rdv | skip | opt_out | perdu | gagne | reactiver
+    type: str  # envoye | repondu | rdv | skip | opt_out | perdu | gagne | reactiver | rappel
+    raison_refus: Optional[str] = None  # pour action perdu/opt_out
+    ca_contrat: Optional[float] = None  # pour action gagne (montant en €)
+    rappel_dans_jours: Optional[int] = None  # pour action rappel (1-90 jours)
 
 
 class ProspectUpdate(BaseModel):
@@ -97,6 +100,8 @@ class ProspectUpdate(BaseModel):
     statut: Optional[str] = None
     message_personnalise: Optional[str] = None
     profil: Optional[str] = None
+    ca_contrat: Optional[float] = None
+    raison_refus: Optional[str] = None
 
 
 class AIImproveRequest(BaseModel):
@@ -194,6 +199,9 @@ def prepare_new_prospect(data: dict) -> dict:
         "notes": "",
         "historique": [],
         "created_at": now_iso(),
+        "ca_contrat": None,
+        "raison_refus": "",
+        "date_rappel": None,
     }
     if not p["score_conversion"]:
         p["score_conversion"], p["niveau_conversion"] = compute_score(p)
@@ -203,6 +211,9 @@ def prepare_new_prospect(data: dict) -> dict:
     p["canal_contact"] = determine_canal(p)
     p["entreprise_norm"] = normalize_company_name(p["entreprise"])
     p["tel_digits"] = phone_digits(p["telephone"])
+    # Vendabilité du site (argumentaire commercial)
+    vendabilite = compute_site_vendabilite(p)
+    p.update(vendabilite)
     return p
 
 
@@ -267,6 +278,84 @@ async def dashboard_stats():
     return {"total": total, "file_du_jour": file_du_jour, "envoyes_aujourdhui": envoyes_auj,
             "repondus": repondus, "contactes": contactes, "taux_reponse": taux,
             "par_statut": par_statut, "par_niveau": par_niveau}
+
+
+@api_router.get("/dashboard/business")
+async def dashboard_business():
+    """Stats business : entonnoir de conversion, CA, raisons de refus."""
+    total = await db.prospects.count_documents({})
+    contactes = await db.prospects.count_documents({"historique.type": "envoye"})
+    repondus = await db.prospects.count_documents({"statut": {"$in": ["repondu", "rdv", "gagne"]}})
+    rdv = await db.prospects.count_documents({"statut": {"$in": ["rdv", "gagne"]}})
+    gagnes = await db.prospects.count_documents({"statut": "gagne"})
+    perdus = await db.prospects.count_documents({"statut": {"$in": ["perdu", "opt_out", "epuise"]}})
+
+    # CA total et moyen
+    ca_pipeline = [
+        {"$match": {"statut": "gagne", "ca_contrat": {"$ne": None, "$gt": 0}}},
+        {"$group": {"_id": None, "total": {"$sum": "$ca_contrat"}, "count": {"$sum": 1},
+                    "min": {"$min": "$ca_contrat"}, "max": {"$max": "$ca_contrat"}}},
+    ]
+    ca_res = await db.prospects.aggregate(ca_pipeline).to_list(1)
+    ca_total = ca_res[0]["total"] if ca_res else 0
+    ca_count = ca_res[0]["count"] if ca_res else 0
+    ca_moyen = round(ca_total / ca_count, 0) if ca_count else 0
+
+    # Raisons de refus (top 8)
+    refus_pipeline = [
+        {"$match": {"raison_refus": {"$nin": ["", None]}}},
+        {"$group": {"_id": "$raison_refus", "n": {"$sum": 1}}},
+        {"$sort": {"n": -1}},
+        {"$limit": 8},
+    ]
+    raisons_refus = [{"raison": r["_id"], "n": r["n"]}
+                     async for r in db.prospects.aggregate(refus_pipeline)]
+
+    # Taux de conversion par profil
+    profil_pipeline = [
+        {"$group": {"_id": "$profil",
+                    "total": {"$sum": 1},
+                    "gagnes": {"$sum": {"$cond": [{"$eq": ["$statut", "gagne"]}, 1, 0]}},
+                    "repondus": {"$sum": {"$cond": [{"$in": ["$statut", ["repondu", "rdv", "gagne"]]}, 1, 0]}}}},
+    ]
+    par_profil = {}
+    async for row in db.prospects.aggregate(profil_pipeline):
+        if row["_id"]:
+            par_profil[row["_id"]] = {
+                "total": row["total"],
+                "gagnes": row["gagnes"],
+                "repondus": row["repondus"],
+                "taux_reponse": round(row["repondus"] / row["total"] * 100, 1) if row["total"] else 0,
+                "taux_conversion": round(row["gagnes"] / row["total"] * 100, 1) if row["total"] else 0,
+            }
+
+    # Derniers clients gagnés
+    derniers_gagnes = await db.prospects.find(
+        {"statut": "gagne"}, {"_id": 0, "entreprise": 1, "ville": 1, "metier": 1,
+                               "ca_contrat": 1, "created_at": 1}
+    ).sort("created_at", -1).limit(5).to_list(5)
+
+    return {
+        "entonnoir": {
+            "total": total,
+            "contactes": contactes,
+            "repondus": repondus,
+            "rdv": rdv,
+            "gagnes": gagnes,
+            "perdus": perdus,
+        },
+        "ca": {
+            "total": ca_total,
+            "moyen": ca_moyen,
+            "count": ca_count,
+        },
+        "raisons_refus": raisons_refus,
+        "par_profil": par_profil,
+        "derniers_gagnes": derniers_gagnes,
+        "taux_reponse": round(repondus / contactes * 100, 1) if contactes else 0,
+        "taux_rdv": round(rdv / repondus * 100, 1) if repondus else 0,
+        "taux_signature": round(gagnes / rdv * 100, 1) if rdv else 0,
+    }
 
 
 @api_router.get("/queue")
@@ -378,12 +467,29 @@ async def prospect_action(prospect_id: str, body: ActionRequest):
         updates.update(advance_updates(p, etapes))
     elif action == "skip":
         updates["date_prochaine_action"] = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
-    elif action in ("repondu", "rdv", "gagne", "perdu", "opt_out"):
+    elif action == "rappel":
+        jours = max(1, min(int(body.rappel_dans_jours or 7), 90))
+        rappel_date = (datetime.now(timezone.utc) + timedelta(days=jours)).isoformat()
+        updates["date_prochaine_action"] = rappel_date
+        updates["date_rappel"] = rappel_date
+        event["jours"] = jours
+    elif action in ("repondu", "rdv"):
         updates["statut"] = action
+    elif action in ("perdu", "opt_out"):
+        updates["statut"] = action
+        if body.raison_refus:
+            updates["raison_refus"] = body.raison_refus
+            event["raison_refus"] = body.raison_refus
+    elif action == "gagne":
+        updates["statut"] = action
+        if body.ca_contrat is not None:
+            updates["ca_contrat"] = body.ca_contrat
+            event["ca_contrat"] = body.ca_contrat
     elif action == "reactiver":
         updates["statut"] = "a_contacter"
         updates["etape_relance"] = 1
         updates["date_prochaine_action"] = now_iso()
+        updates["date_rappel"] = None
     else:
         raise HTTPException(400, f"Action inconnue : {action}")
 
@@ -990,7 +1096,6 @@ async def import_from_sendgrid(body: SendgridImportRequest):
         summary["preview"] = preview
         return summary
 
-    settings_data = s
     scenario = await get_scenario("site_moyen")  # par défaut, ajusté ensuite si audit
     etapes_default = scenario.get("etapes", [])
 
@@ -1352,6 +1457,17 @@ async def api_backup_restore(drop_existing: bool = True):
 
 # ============================================================ App setup
 
+@api_router.post("/admin/migrate-vendabilite")
+async def api_migrate_vendabilite():
+    """Force le recalcul du score de vendabilité sur tous les prospects."""
+    total = 0
+    async for p in db.prospects.find({}, {"_id": 0}):
+        v = compute_site_vendabilite(p)
+        await db.prospects.update_one({"id": p["id"]}, {"$set": v})
+        total += 1
+    return {"migrated": total}
+
+
 api_router.include_router(create_webhook_router(db))
 app.include_router(api_router)
 
@@ -1408,6 +1524,17 @@ async def migrate_scoring_v2():
     logger.info(f"Migration scoring v2 : {n} prospect(s) rescoré(s)")
 
 
+async def migrate_vendabilite():
+    """Calcule vendabilité sur tous les prospects qui n'ont pas encore ce champ."""
+    n = 0
+    async for p in db.prospects.find({"score_vendabilite": {"$exists": False}}, {"_id": 0}):
+        v = compute_site_vendabilite(p)
+        await db.prospects.update_one({"id": p["id"]}, {"$set": v})
+        n += 1
+    if n:
+        logger.info(f"Migration vendabilité : {n} prospect(s) mis à jour")
+
+
 @app.on_event("startup")
 async def seed():
     for profil, sc in DEFAULT_SCENARIOS.items():
@@ -1435,6 +1562,8 @@ async def seed():
         await restore_if_empty(db)
     except Exception as exc:  # noqa: BLE001
         logger.exception("Restauration auto échouée : %s", exc)
+    # Calcul vendabilité après restauration éventuelle (prospects restaurés inclus)
+    await migrate_vendabilite()
     asyncio.create_task(autopilot_loop(db))
     asyncio.create_task(backup_loop(db))
 

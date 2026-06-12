@@ -434,7 +434,9 @@ def _detect_buying_signals(text_lower: str, site_web: str, telephone: str) -> tu
     years = [int(m) for m in re.findall(r"\b(20[12]\d)\b", text_lower) if 2010 <= int(m) <= 2030]
     max_year = max(years) if years else 0
     signals["copyright_obsolete"] = 0 < max_year < 2025
+    signals["annee_creation_ancienne"] = 0 < max_year < 2020  # très daté ≤ 2019
     signals["pas_de_site"] = not has_site
+    signals["pas_https"] = has_site and bool(site_web) and site_web.startswith("http://")
     signals["pas_de_telephone"] = bool(
         has_site and telephone and telephone.replace(" ", "")[-9:] not in text_lower.replace(" ", ""))
     signals["pas_de_contact"] = has_site and not any(
@@ -451,7 +453,9 @@ def _detect_buying_signals(text_lower: str, site_web: str, telephone: str) -> tu
     priorities = [
         ("pas_de_site", "Pas de site web"),
         ("site_en_construction", "Site en construction"),
+        ("annee_creation_ancienne", "Site très daté (≤ 2019)"),
         ("copyright_obsolete", "Copyright obsolète"),
+        ("pas_https", "Site non sécurisé (HTTP)"),
         ("pas_de_telephone", "Téléphone manquant"),
         ("pas_de_contact", "Pas de formulaire de contact"),
         ("devis_gratuit", "Propose des devis gratuits"),
@@ -650,7 +654,95 @@ def compute_score(p: dict) -> tuple[int, str]:
     return score, niveau_from_score(score)
 
 
-# ---------------------------------------------------------------- liens
+def compute_site_vendabilite(p: dict) -> dict:
+    """Analyse détaillée de vendabilité du site pour l'argumentaire commercial.
+    Retourne un dict avec score_vendabilite /100, label, raisons clés, et pitch.
+    """
+    site = p.get("site_web", "")
+    note = int(p.get("note_site", 0) or 0)
+    try:
+        signaux = json.loads(p.get("signaux_conversion") or "{}")
+    except (json.JSONDecodeError, TypeError):
+        signaux = {}
+
+    score = 0
+    raisons: list[str] = []
+    pitch_elements: list[str] = []
+
+    if not has_real_website(site):
+        score += 40
+        raisons.append("Aucun site web — invisible sur Google")
+        pitch_elements.append("introuvable sur Google quand un client cherche")
+    else:
+        if site.startswith("http://"):
+            score += 20
+            raisons.append("Site non sécurisé (HTTP) — Google pénalise")
+            pitch_elements.append("navigateur affiche « non sécurisé »")
+        if note < 30:
+            score += 35
+            raisons.append(f"Site très obsolète ({note}/100)")
+            pitch_elements.append("site daté fait fuir en 5 secondes sur mobile")
+        elif note < 50:
+            score += 25
+            raisons.append(f"Site obsolète ({note}/100)")
+            pitch_elements.append("concurrent avec un site moderne le dépasse sur Google")
+        elif note < 70:
+            score += 10
+            raisons.append(f"Site perfectible ({note}/100)")
+
+        if signaux.get("annee_creation_ancienne"):
+            score += 15
+            raisons.append("Copyright ≤ 2019 — site de plus de 5 ans")
+            pitch_elements.append("clients voient un copyright 2018 et doutent")
+        elif signaux.get("copyright_obsolete"):
+            score += 8
+            raisons.append("Copyright non mis à jour")
+
+        if signaux.get("contenu_limite"):
+            score += 10
+            raisons.append("Contenu très limité — peu de chances d'apparaître sur Google")
+            pitch_elements.append("Google n'indexe presque pas un site vide")
+
+        if signaux.get("pas_de_contact"):
+            score += 8
+            raisons.append("Pas de formulaire de contact / devis")
+            pitch_elements.append("les visiteurs ne peuvent pas demander de devis")
+
+        if signaux.get("pas_de_telephone"):
+            score += 5
+            raisons.append("Téléphone absent ou non cliquable sur mobile")
+
+        if signaux.get("blog_inactif"):
+            score += 5
+            raisons.append("Blog inactif — signal négatif pour Google")
+
+    score = min(score, 100)
+
+    if score >= 70:
+        label = "🔥 Très vendable"
+    elif score >= 45:
+        label = "👍 Vendable"
+    elif score >= 20:
+        label = "🤔 Potentiel"
+    else:
+        label = "❄️ Faible"
+
+    # Pitch commercial court basé sur les raisons réelles
+    pitch = ""
+    if pitch_elements:
+        pitch = f"Actuellement, {pitch_elements[0]}."
+        if len(pitch_elements) > 1:
+            pitch += f" En plus, {pitch_elements[1]}."
+
+    return {
+        "score_vendabilite": score,
+        "label_vendabilite": label,
+        "raisons_vendabilite": raisons[:3],  # top 3
+        "pitch_vendabilite": pitch,
+    }
+
+
+
 
 def build_wa_link(telephone: str, message: str = "") -> str:
     if not telephone:

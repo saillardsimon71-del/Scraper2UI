@@ -17,7 +17,7 @@ export const STATUT_LABELS = {
   a_contacter: "À contacter",
   repondu: "Répondu",
   rdv: "RDV pris",
-  gagne: "Gagné",
+  gagne: "Gagné ✅",
   perdu: "Perdu",
   opt_out: "Opt-out",
   epuise: "Séquence épuisée",

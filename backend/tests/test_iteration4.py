@@ -11,7 +11,7 @@ import sys
 import pytest
 import requests
 
-BASE = os.environ.get("REACT_APP_BACKEND_URL", "https://856f08f4-547c-4196-840c-4ba45d1a8a0d.preview.emergentagent.com").rstrip("/")
+BASE = os.environ.get("REACT_APP_BACKEND_URL", "https://entonnoir-conversion.preview.emergentagent.com").rstrip("/")
 API = f"{BASE}/api"
 
 sys.path.insert(0, "/app/backend")

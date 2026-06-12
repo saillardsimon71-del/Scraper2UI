@@ -13,6 +13,10 @@ import {
   Prohibit,
   ArrowCounterClockwise,
   CaretRight,
+  Bell,
+  CurrencyEur,
+  Trophy,
+  X,
 } from "@phosphor-icons/react";
 import api, { NIVEAU_STYLES, PROFIL_LABELS, STATUT_LABELS, STATUT_STYLES } from "@/lib/api";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -28,6 +32,14 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
   const [auditWaLink, setAuditWaLink] = useState("");
   const [draft, setDraft] = useState("");
   const [openHist, setOpenHist] = useState(null);
+  const [showRappel, setShowRappel] = useState(false);
+  const [showGagne, setShowGagne] = useState(false);
+  const [showPerdu, setShowPerdu] = useState(false);
+  const [rappelJours, setRappelJours] = useState(7);
+  const [caContrat, setCaContrat] = useState("");
+  const [raisonRefus, setRaisonRefus] = useState("");
+
+  const RAISONS_SUGGESTIONS = ["Trop cher", "Déjà quelqu'un", "Pas intéressé", "Rappeler plus tard", "A déjà un site récent", "Arrête l'activité"];
 
   const load = useCallback(async () => {
     if (!prospectId) return;
@@ -52,6 +64,39 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
   const doAction = async (type, label) => {
     await api.post(`/prospects/${prospectId}/action`, { type });
     toast.success(label);
+    load();
+    onChanged?.();
+  };
+
+  const doActionGagne = async () => {
+    await api.post(`/prospects/${prospectId}/action`, {
+      type: "gagne",
+      ca_contrat: caContrat ? parseFloat(caContrat) : null,
+    });
+    toast.success(`Client gagné 🎉${caContrat ? ` — ${caContrat} €` : ""}`);
+    setShowGagne(false);
+    load();
+    onChanged?.();
+  };
+
+  const doActionPerdu = async () => {
+    await api.post(`/prospects/${prospectId}/action`, {
+      type: "perdu",
+      raison_refus: raisonRefus || "",
+    });
+    toast.success("Marqué perdu");
+    setShowPerdu(false);
+    load();
+    onChanged?.();
+  };
+
+  const doActionRappel = async () => {
+    await api.post(`/prospects/${prospectId}/action`, {
+      type: "rappel",
+      rappel_dans_jours: rappelJours,
+    });
+    toast.success(`Rappel programmé dans ${rappelJours} jour(s)`);
+    setShowRappel(false);
     load();
     onChanged?.();
   };
@@ -316,30 +361,135 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
 
               <div>
                 <div className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-500 mb-2">Statut</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button data-testid="btn-action-envoye" size="sm" variant="outline" className="rounded-sm text-emerald-700 border-emerald-300"
-                    onClick={() => doAction("envoye", "Envoyé — relance planifiée")}>
-                    <CheckCircle size={14} className="mr-1.5" /> Marquer envoyé
-                  </Button>
-                  <Button data-testid="btn-action-repondu" size="sm" variant="outline" className="rounded-sm"
-                    onClick={() => doAction("repondu", "Marqué répondu")}>
-                    💬 A répondu
-                  </Button>
-                  <Button data-testid="btn-action-rdv" size="sm" variant="outline" className="rounded-sm text-violet-700 border-violet-300"
-                    onClick={() => doAction("rdv", "RDV pris 🎉")}>
-                    <CalendarCheck size={14} className="mr-1.5" /> RDV pris
-                  </Button>
-                  <Button data-testid="btn-action-optout" size="sm" variant="outline" className="rounded-sm text-red-600 border-red-200"
-                    onClick={() => doAction("opt_out", "Opt-out enregistré")}>
-                    <Prohibit size={14} className="mr-1.5" /> Opt-out
-                  </Button>
-                  {p.statut !== "a_contacter" && (
-                    <Button data-testid="btn-action-reactiver" size="sm" variant="outline" className="rounded-sm col-span-2"
-                      onClick={() => doAction("reactiver", "Prospect réactivé en étape 1")}>
-                      <ArrowCounterClockwise size={14} className="mr-1.5" /> Réactiver la séquence
+
+                {/* Vendabilité */}
+                {p.label_vendabilite && (
+                  <div className="mb-3 bg-amber-50 border border-amber-200 rounded-sm p-3">
+                    <div className="text-xs font-semibold text-amber-800 mb-1">Argument de vente : {p.label_vendabilite}</div>
+                    {p.pitch_vendabilite && <p className="text-xs text-amber-700 italic">{p.pitch_vendabilite}</p>}
+                    {p.raisons_vendabilite?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {p.raisons_vendabilite.map((r) => (
+                          <span key={r} className="text-[10px] bg-amber-100 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded-sm">⚡ {r}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* CA et raison refus si dispo */}
+                {p.ca_contrat > 0 && (
+                  <div className="mb-3 flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-sm px-3 py-2">
+                    <Trophy size={14} weight="fill" />
+                    Client signé — <span className="font-bold">{p.ca_contrat.toLocaleString("fr-FR")} €</span>
+                  </div>
+                )}
+                {p.raison_refus && (
+                  <div className="mb-3 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-sm px-3 py-2">
+                    Raison du refus : <span className="font-medium text-slate-700">{p.raison_refus}</span>
+                  </div>
+                )}
+
+                {/* Boutons d'action */}
+                {!showGagne && !showPerdu && !showRappel && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button data-testid="btn-action-envoye" size="sm" variant="outline" className="rounded-sm text-emerald-700 border-emerald-300"
+                      onClick={() => doAction("envoye", "Envoyé — relance planifiée")}>
+                      <CheckCircle size={14} className="mr-1.5" /> Marquer envoyé
                     </Button>
-                  )}
-                </div>
+                    <Button data-testid="btn-action-repondu" size="sm" variant="outline" className="rounded-sm"
+                      onClick={() => doAction("repondu", "Marqué répondu")}>
+                      💬 A répondu
+                    </Button>
+                    <Button data-testid="btn-action-rdv" size="sm" variant="outline" className="rounded-sm text-violet-700 border-violet-300"
+                      onClick={() => doAction("rdv", "RDV pris 🎉")}>
+                      <CalendarCheck size={14} className="mr-1.5" /> RDV pris
+                    </Button>
+                    <Button data-testid="btn-action-gagne" size="sm" variant="outline" className="rounded-sm text-emerald-700 border-emerald-300"
+                      onClick={() => setShowGagne(true)}>
+                      <Trophy size={14} className="mr-1.5" /> Client gagné 🎉
+                    </Button>
+                    <Button data-testid="btn-action-rappel" size="sm" variant="outline" className="rounded-sm text-[#002FA7] border-blue-200"
+                      onClick={() => setShowRappel(true)}>
+                      <Bell size={14} className="mr-1.5" /> Rappeler dans…
+                    </Button>
+                    <Button data-testid="btn-action-perdu" size="sm" variant="outline" className="rounded-sm text-red-600 border-red-200"
+                      onClick={() => setShowPerdu(true)}>
+                      <Prohibit size={14} className="mr-1.5" /> Perdu / Refus
+                    </Button>
+                    {p.statut !== "a_contacter" && (
+                      <Button data-testid="btn-action-reactiver" size="sm" variant="outline" className="rounded-sm col-span-2"
+                        onClick={() => doAction("reactiver", "Prospect réactivé en étape 1")}>
+                        <ArrowCounterClockwise size={14} className="mr-1.5" /> Réactiver la séquence
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {/* Modale inline : Gagné */}
+                {showGagne && (
+                  <div className="border border-emerald-200 bg-emerald-50 rounded-sm p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-semibold text-emerald-800">🎉 Client gagné !</div>
+                      <button onClick={() => setShowGagne(false)}><X size={14} className="text-slate-400" /></button>
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-500 block mb-1">Montant du contrat (€)</label>
+                      <div className="relative">
+                        <CurrencyEur size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input type="number" value={caContrat} onChange={e => setCaContrat(e.target.value)} placeholder="300"
+                          className="w-full border border-emerald-200 rounded-sm pl-8 pr-3 py-2 text-sm outline-none focus:border-emerald-500 bg-white" />
+                      </div>
+                    </div>
+                    <Button size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm" onClick={doActionGagne}>
+                      Confirmer le client gagné
+                    </Button>
+                  </div>
+                )}
+
+                {/* Modale inline : Rappel */}
+                {showRappel && (
+                  <div className="border border-blue-200 bg-blue-50 rounded-sm p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-semibold text-blue-800">Rappeler dans…</div>
+                      <button onClick={() => setShowRappel(false)}><X size={14} className="text-slate-400" /></button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[1, 3, 7, 14, 30, 60].map((j) => (
+                        <button key={j} onClick={() => setRappelJours(j)}
+                          className={`px-2.5 py-1 text-xs rounded-sm border transition-colors ${rappelJours === j ? "bg-[#002FA7] text-white border-[#002FA7]" : "border-blue-200 bg-white text-blue-700 hover:border-[#002FA7]"}`}>
+                          {j === 1 ? "Demain" : j < 7 ? `${j}j` : j === 7 ? "1 sem" : j === 14 ? "2 sem" : j === 30 ? "1 mois" : "2 mois"}
+                        </button>
+                      ))}
+                    </div>
+                    <Button size="sm" className="w-full bg-[#002FA7] hover:bg-[#001f7a] text-white rounded-sm" onClick={doActionRappel}>
+                      <Bell size={13} className="mr-1.5" /> Programmer le rappel
+                    </Button>
+                  </div>
+                )}
+
+                {/* Modale inline : Perdu */}
+                {showPerdu && (
+                  <div className="border border-red-200 bg-red-50 rounded-sm p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-semibold text-red-800">Raison du refus</div>
+                      <button onClick={() => setShowPerdu(false)}><X size={14} className="text-slate-400" /></button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {RAISONS_SUGGESTIONS.map((r) => (
+                        <button key={r} onClick={() => setRaisonRefus(r)}
+                          className={`px-2.5 py-1 text-xs rounded-sm border transition-colors ${raisonRefus === r ? "bg-red-600 text-white border-red-600" : "border-red-200 bg-white text-red-700 hover:border-red-400"}`}>
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                    <input value={raisonRefus} onChange={e => setRaisonRefus(e.target.value)} placeholder="Autre raison…"
+                      className="w-full border border-red-200 rounded-sm px-3 py-2 text-sm bg-white outline-none focus:border-red-400" />
+                    <Button size="sm" className="w-full bg-red-600 hover:bg-red-700 text-white rounded-sm" onClick={doActionPerdu}>
+                      Enregistrer le refus
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {p.historique?.length > 0 && (

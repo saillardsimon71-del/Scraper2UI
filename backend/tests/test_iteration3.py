@@ -9,7 +9,7 @@ import pytest
 import requests
 from datetime import datetime, timezone, timedelta
 
-BASE = os.environ.get("REACT_APP_BACKEND_URL", "https://7d25508e-43ab-4cfc-860d-5412eeeaf5f2.preview.emergentagent.com").rstrip("/")
+BASE = os.environ.get("REACT_APP_BACKEND_URL", "https://entonnoir-conversion.preview.emergentagent.com").rstrip("/")
 API = f"{BASE}/api"
 
 

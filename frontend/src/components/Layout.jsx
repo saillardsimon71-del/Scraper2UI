@@ -10,10 +10,12 @@ import {
   Crosshair,
   EnvelopeOpen,
   Handshake,
+  ChartLineUp,
 } from "@phosphor-icons/react";
 
 const NAV = [
   { to: "/", label: "File du jour", icon: SunHorizon, testid: "nav-file-du-jour" },
+  { to: "/business", label: "Business", icon: ChartLineUp, testid: "nav-business" },
   { to: "/prospects", label: "Prospects", icon: UsersThree, testid: "nav-prospects" },
   { to: "/pipeline", label: "Pipeline", icon: Kanban, testid: "nav-pipeline" },
   { to: "/reponses", label: "Réponses", icon: EnvelopeOpen, testid: "nav-reponses" },
