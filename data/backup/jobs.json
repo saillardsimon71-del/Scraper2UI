@@ -1,1 +1,75 @@
-[]
+[
+  {
+    "_id": {
+      "$oid": "6a2bee6098fd39822c4aaed0"
+    },
+    "ajoutes": 248,
+    "created_at": "2026-06-12T11:32:48.198548+00:00",
+    "doublons": 3,
+    "id": "9063d106-d4c2-4bea-8ebe-88bf5d926cd2",
+    "logs": [
+      "[11:32:48] Découverte via osm (1/32) : plombier à Lyon…",
+      "[11:32:50] Découverte via osm (2/32) : plombier à Nantes…",
+      "[11:32:53] Découverte via osm (3/32) : plombier à Lille…",
+      "[11:33:05] Découverte via osm (4/32) : plombier à Bordeaux…",
+      "[11:33:20] Découverte via osm (5/32) : plombier à Rennes…",
+      "[11:33:28] Découverte via osm (6/32) : plombier à Marseille…",
+      "[11:33:30] Découverte via osm (7/32) : plombier à Brest…",
+      "[11:33:41] Découverte via osm (8/32) : plombier à Evreux…",
+      "[11:33:50] Découverte via osm (9/32) : electricien à Lyon…",
+      "[11:33:54] Découverte via osm (10/32) : electricien à Nantes…",
+      "[11:33:55] Découverte via osm (11/32) : electricien à Lille…",
+      "[11:34:05] Découverte via osm (12/32) : electricien à Bordeaux…",
+      "[11:34:24] Découverte via osm (13/32) : electricien à Rennes…",
+      "[11:34:26] Découverte via osm (14/32) : electricien à Marseille…",
+      "[11:34:39] Découverte via osm (15/32) : electricien à Brest…",
+      "[11:34:48] Découverte via osm (16/32) : electricien à Evreux…",
+      "[11:34:54] Découverte via osm (17/32) : menuisier à Lyon…",
+      "[11:34:59] Découverte via osm (18/32) : menuisier à Nantes…",
+      "[11:35:08] Découverte via osm (19/32) : menuisier à Lille…",
+      "[11:35:20] Découverte via osm (20/32) : menuisier à Bordeaux…",
+      "[11:35:29] Découverte via osm (21/32) : menuisier à Rennes…",
+      "[11:35:40] Découverte via osm (22/32) : menuisier à Marseille…",
+      "[11:35:42] Découverte via osm (23/32) : menuisier à Brest…",
+      "[11:35:43] Découverte via osm (24/32) : menuisier à Evreux…",
+      "[11:35:53] Découverte via osm (25/32) : peintre à Lyon…",
+      "[11:36:02] Découverte via osm (26/32) : peintre à Nantes…",
+      "[11:36:11] Découverte via osm (27/32) : peintre à Lille…",
+      "[11:36:15] Découverte via osm (28/32) : peintre à Bordeaux…",
+      "[11:36:34] Découverte via osm (29/32) : peintre à Rennes…",
+      "[11:36:43] Découverte via osm (30/32) : peintre à Marseille…",
+      "[11:36:44] Découverte via osm (31/32) : peintre à Brest…",
+      "[11:36:45] Découverte via osm (32/32) : peintre à Evreux…",
+      "[11:36:55] 295 entreprises découvertes",
+      "[11:36:55] Enrichissement + audit des sites…",
+      "[11:43:09] Terminé : 248 prospects ajoutés, 3 doublons ignorés, 44 sans aucun contact (email/tél/LinkedIn) écartés."
+    ],
+    "params": {
+      "auditer": true,
+      "departement": "",
+      "limite": 20,
+      "metiers": [
+        "plombier",
+        "electricien",
+        "menuisier",
+        "peintre"
+      ],
+      "source": "osm",
+      "villes": [
+        "Lyon",
+        "Nantes",
+        "Lille",
+        "Bordeaux",
+        "Rennes",
+        "Marseille",
+        "Brest",
+        "Evreux"
+      ]
+    },
+    "progress": 100,
+    "sans_contact": 44,
+    "statut": "termine",
+    "total": 295,
+    "traites": 295
+  }
+]

@@ -1,11 +1,11 @@
 {
   "collections": {
     "email_log": 0,
-    "jobs": 0,
-    "prospects": 135,
+    "jobs": 1,
+    "prospects": 383,
     "scenarios": 4,
     "settings": 1
   },
-  "last_dump_at": "2026-06-12T11:26:04.239338+00:00",
-  "total_docs": 140
+  "last_dump_at": "2026-06-12T11:59:39.218107+00:00",
+  "total_docs": 389
 }
