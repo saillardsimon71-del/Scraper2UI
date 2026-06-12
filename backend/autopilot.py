@@ -15,7 +15,7 @@ import uuid
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-from prospection import DEFAULT_SCENARIOS, advance_updates, render_message
+from prospection import DEFAULT_SCENARIOS, advance_updates, pick_objet, render_message
 from scraper_core import as_str
 
 logger = logging.getLogger("autopilot")
@@ -125,11 +125,14 @@ async def run_tick(db, force: bool = False) -> dict:
 
     for p, step, etapes in candidats[:restant]:
         message = as_str(p.get("message_personnalise")) or render_message(step.get("template", ""), p, settings)
-        objet = render_message(as_str(step.get("objet")) or DEFAULT_OBJET, p, settings)
+        variante = p.get("variante_ab", "A")
+        objet_template = as_str(pick_objet(step, variante)) or DEFAULT_OBJET
+        objet = render_message(objet_template, p, settings)
         entry = {
             "id": str(uuid.uuid4()), "prospect_id": p["id"],
             "entreprise": as_str(p.get("entreprise")), "destinataire": p["email"],
             "objet": objet, "etape": int(p.get("etape_relance", 1)),
+            "variante": variante,
             "message": message, "auto": True, "date": now_iso(),
         }
         try:
@@ -144,7 +147,8 @@ async def run_tick(db, force: bool = False) -> dict:
                  "$push": {"historique": {
                      "type": "envoye", "canal": "email", "auto": True,
                      "date": now_iso(), "etape": int(p.get("etape_relance", 1)),
-                     "objet": objet, "message": message}}})
+                     "objet": objet, "objet_template": objet_template,
+                     "variante": variante, "message": message}}})
             envoyes += 1
         except Exception as e:
             logger.warning(f"Autopilot : échec envoi à {p['email']} : {e}")

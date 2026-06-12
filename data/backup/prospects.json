@@ -41,6 +41,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -56,6 +62,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -100,6 +107,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -115,6 +128,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -159,6 +173,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -174,6 +194,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -218,6 +239,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -233,6 +260,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -277,6 +305,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -292,6 +326,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -336,6 +371,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -351,6 +392,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -395,6 +437,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -410,6 +458,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -454,6 +503,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -469,6 +524,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -513,6 +569,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -528,6 +590,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -572,6 +635,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -587,6 +656,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -639,6 +709,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -655,6 +731,7 @@
     "statut": "repondu",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -699,6 +776,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -714,6 +797,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -758,6 +842,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -773,6 +863,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -817,6 +908,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -832,6 +929,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -876,6 +974,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -891,6 +995,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -935,6 +1040,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -950,6 +1061,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -994,6 +1106,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1009,6 +1127,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -1053,6 +1172,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1068,6 +1193,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -1112,6 +1238,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1127,6 +1259,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -1171,6 +1304,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1186,6 +1325,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -1230,6 +1370,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1245,6 +1391,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -1289,6 +1436,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1304,6 +1457,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -1348,6 +1502,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1363,6 +1523,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -1407,6 +1568,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1422,6 +1589,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -1466,6 +1634,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1481,6 +1655,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -1525,6 +1700,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1540,6 +1721,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -1584,6 +1766,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1599,6 +1787,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -1643,6 +1832,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1658,6 +1853,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -1702,6 +1898,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1717,6 +1919,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -1761,6 +1964,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1776,6 +1985,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -1820,6 +2030,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1835,6 +2051,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -1879,6 +2096,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1894,6 +2117,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -1938,6 +2162,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -1953,6 +2183,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -1997,6 +2228,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2012,6 +2249,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -2056,6 +2294,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2071,6 +2315,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -2115,6 +2360,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2130,6 +2381,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -2174,6 +2426,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2189,6 +2447,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -2233,6 +2492,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2248,6 +2513,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -2292,6 +2558,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2307,6 +2579,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -2351,6 +2624,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2366,6 +2645,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -2410,6 +2690,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2425,6 +2711,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -2469,6 +2756,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2484,6 +2777,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -2528,6 +2822,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2543,6 +2843,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -2587,6 +2888,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2602,6 +2909,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -2646,6 +2954,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, navigateur affiche « non sécurisé ». En plus, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2662,6 +2976,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -2706,6 +3021,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2721,6 +3042,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -2765,6 +3087,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2780,6 +3108,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -2824,6 +3153,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2839,6 +3174,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -2883,6 +3219,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2898,6 +3240,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -2942,6 +3285,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -2957,6 +3306,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -3001,6 +3351,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3016,6 +3372,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -3060,6 +3417,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3075,6 +3438,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -3119,6 +3483,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3134,6 +3504,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -3178,6 +3549,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3193,6 +3570,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -3237,6 +3615,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3252,6 +3636,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -3296,6 +3681,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3311,6 +3702,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -3355,6 +3747,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3370,6 +3768,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -3414,6 +3813,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3429,6 +3834,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -3473,6 +3879,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3488,6 +3900,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -3532,6 +3945,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3547,6 +3966,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -3591,6 +4011,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3606,6 +4032,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -3650,6 +4077,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3665,6 +4098,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -3709,6 +4143,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3724,6 +4164,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -3768,6 +4209,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3783,6 +4230,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -3827,6 +4275,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3842,6 +4296,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -3886,6 +4341,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3901,6 +4362,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -3945,6 +4407,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -3960,6 +4428,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -4004,6 +4473,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4019,6 +4494,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -4063,6 +4539,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4078,6 +4560,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -4122,6 +4605,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4137,6 +4626,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -4181,6 +4671,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4196,6 +4692,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -4240,6 +4737,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4255,6 +4758,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -4299,6 +4803,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4314,6 +4824,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -4358,6 +4869,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4373,6 +4890,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -4417,6 +4935,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4432,6 +4956,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -4476,6 +5001,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4491,6 +5022,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -4535,6 +5067,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4550,6 +5088,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -4594,6 +5133,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4609,6 +5154,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -4653,6 +5199,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4668,6 +5220,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -4712,6 +5265,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4727,6 +5286,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -4771,6 +5331,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4786,6 +5352,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -4830,6 +5397,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4845,6 +5418,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -4889,6 +5463,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4904,6 +5484,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -4948,6 +5529,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -4963,6 +5550,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -5007,6 +5595,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5022,6 +5616,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -5066,6 +5661,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5081,6 +5682,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -5125,6 +5727,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5140,6 +5748,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -5184,6 +5793,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5199,6 +5814,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -5243,6 +5859,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5258,6 +5880,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -5302,6 +5925,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5317,6 +5946,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -5361,6 +5991,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5376,6 +6012,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -5420,6 +6057,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5435,6 +6078,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -5479,6 +6123,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5494,6 +6144,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -5538,6 +6189,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5553,6 +6210,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -5597,6 +6255,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5612,6 +6276,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -5656,6 +6321,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5671,6 +6342,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -5715,6 +6387,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5730,6 +6408,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -5774,6 +6453,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5789,6 +6474,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -5833,6 +6519,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5848,6 +6540,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -5892,6 +6585,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5907,6 +6606,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -5951,6 +6651,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -5966,6 +6672,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -6010,6 +6717,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6025,6 +6738,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -6069,6 +6783,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6084,6 +6804,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -6128,6 +6849,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6143,6 +6870,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -6187,6 +6915,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6202,6 +6936,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -6246,6 +6981,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6261,6 +7002,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -6305,6 +7047,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6320,6 +7068,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -6364,6 +7113,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6379,6 +7134,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -6423,6 +7179,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6438,6 +7200,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -6482,6 +7245,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6497,6 +7266,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -6541,6 +7311,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6556,6 +7332,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -6600,6 +7377,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6615,6 +7398,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -6659,6 +7443,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6674,6 +7464,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -6718,6 +7509,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6733,6 +7530,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -6777,6 +7575,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, navigateur affiche « non sécurisé ». En plus, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6793,6 +7597,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -6837,6 +7642,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6852,6 +7663,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -6896,6 +7708,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6911,6 +7729,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -6955,6 +7774,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -6970,6 +7795,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -7014,6 +7840,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7029,6 +7861,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -7073,6 +7906,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7088,6 +7927,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -7132,6 +7972,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7147,6 +7993,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -7191,6 +8038,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7206,6 +8059,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -7250,6 +8104,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7265,6 +8125,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -7309,6 +8170,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7324,6 +8191,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -7368,6 +8236,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7383,6 +8257,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -7427,6 +8302,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7442,6 +8323,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -7486,6 +8368,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7501,6 +8389,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -7545,6 +8434,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7560,6 +8455,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -7604,6 +8500,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7619,6 +8521,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -7663,6 +8566,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7678,6 +8587,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -7722,6 +8632,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7737,6 +8653,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -7781,6 +8698,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7796,6 +8719,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -7840,6 +8764,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, introuvable sur Google quand un client cherche.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "pas_de_site",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7855,6 +8785,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   },
   {
@@ -7899,6 +8830,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7914,6 +8851,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "A",
     "ville": ""
   },
   {
@@ -7958,6 +8896,12 @@
     "notes": "",
     "opportunites": "",
     "pitch_vendabilite": "Actuellement, site daté fait fuir en 5 secondes sur mobile.",
+    "plan_canaux": [
+      "email",
+      "email",
+      "email",
+      "email"
+    ],
     "profil": "site_ancien",
     "qualite_site": "",
     "raisons_vendabilite": [
@@ -7973,6 +8917,7 @@
     "statut": "a_contacter",
     "tel_digits": "",
     "telephone": "",
+    "variante_ab": "B",
     "ville": ""
   }
 ]

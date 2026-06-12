@@ -22,12 +22,13 @@ DEFAULT_OFFRE = "un site pro à partir de 300 €, livré en 72 h, spécialement
 
 # Version des templates par défaut : incrémentée à chaque refonte des messages.
 # Au démarrage, les scénarios en base avec une version inférieure sont remplacés.
-SCENARIO_VERSION = 2
+# v3 : objets A/B, suppression des ouvertures « c'est Simon » / « Simon ici »,
+#      injection de {argument_vente} (vendabilité), séquences multi-canal.
+SCENARIO_VERSION = 3
 
 
 def determine_canal(p: dict) -> str:
-    """Canal unique de toute la séquence, par priorité :
-    email > whatsapp (mobile 06/07) > linkedin > téléphone (appel sur fixe).
+    """Canal prioritaire : email > whatsapp (mobile 06/07) > linkedin > téléphone.
 
     Retourne "" si le prospect n'a aucun moyen de contact (à supprimer / ne pas ajouter).
     """
@@ -40,6 +41,52 @@ def determine_canal(p: dict) -> str:
     if as_str(p.get("telephone")):
         return "telephone"
     return ""
+
+
+def available_canaux(p: dict) -> list[str]:
+    """Canaux disponibles du prospect, dans l'ordre Email → WhatsApp → LinkedIn.
+    Le téléphone (fixe) n'est utilisé qu'en dernier recours s'il est seul."""
+    canaux = []
+    if as_str(p.get("email")):
+        canaux.append("email")
+    if is_mobile_fr(p.get("telephone", "")):
+        canaux.append("whatsapp")
+    if as_str(p.get("linkedin_url")):
+        canaux.append("linkedin")
+    if not canaux and as_str(p.get("telephone")):
+        canaux.append("telephone")
+    return canaux
+
+
+def canal_plan(p: dict, n_etapes: int = 4) -> list[str]:
+    """Plan multi-canal de la séquence (Email → WhatsApp → LinkedIn).
+
+    - 1 seul canal disponible → toute la séquence dessus (comme avant).
+    - Plusieurs canaux → étapes 1-2 sur le canal principal, puis rotation sur les
+      canaux secondaires : changer de canal relance l'attention du prospect.
+      Ex. email+mobile+linkedin : email, email, whatsapp, linkedin.
+      Ex. email+mobile : email, email, whatsapp, email.
+    Retourne [] si aucun moyen de contact.
+    """
+    canaux = available_canaux(p)
+    if not canaux:
+        return []
+    if len(canaux) == 1:
+        return [canaux[0]] * n_etapes
+    plan = []
+    for i in range(n_etapes):
+        if i < 2:
+            plan.append(canaux[0])
+        else:
+            plan.append(canaux[(i - 1) % len(canaux)])
+    return plan
+
+
+def pick_objet(step: dict, variante: str) -> str:
+    """Objet d'email selon la variante A/B assignée au prospect."""
+    if variante == "B" and as_str(step.get("objet_b")):
+        return step["objet_b"]
+    return step.get("objet", "")
 
 
 # ---------------------------------------------------------------- saisonnalité
@@ -92,7 +139,7 @@ def step_template(step: dict, canal: str) -> str:
 # delai_jours = jours d'attente APRÈS l'étape précédente (étape 1 : immédiat)
 # template       : message complet (email, ou fallback tous canaux)
 # template_court : variante 2-3 lignes utilisée sur WhatsApp / LinkedIn
-# L'objet n'est utilisé que pour le canal email.
+# objet / objet_b : objets d'email A/B — la variante est assignée 50/50 par prospect.
 DEFAULT_SCENARIOS = {
     "pas_de_site": {
         "profil": "pas_de_site",
@@ -102,20 +149,24 @@ DEFAULT_SCENARIOS = {
         "etapes": [
             {"etape": 1, "delai_jours": 0,
              "objet": "Un site pour {entreprise} ?",
+             "objet_b": "Impossible de trouver {entreprise} sur Google",
              "template": "Bonjour, je suis {prenom_exp}, je travaille dans le web. Je cherchais le site de {entreprise} pour voir vos réalisations, mais je n'ai rien trouvé en ligne. Vous avez une page quelque part ?",
              "template_court": ""},
             {"etape": 2, "delai_jours": 3,
              "objet": "Recherche « {metier} {ville} » sur Google",
-             "template": "Bonjour, c'est {prenom_exp}. J'ai cherché « {metier} {ville} » sur Google : vos concurrents ressortent, pas {entreprise}. Bonne nouvelle : même sans site, une fiche Google bien remplie (photos de chantiers, avis, horaires) peut déjà vous amener des appels. {accroche_saison} Je vous montre ce que ça donnerait pour vous ?",
-             "template_court": "Bonjour, c'est {prenom_exp}. J'ai cherché « {metier} {ville} » sur Google : vos concurrents ressortent, pas {entreprise}. Une fiche Google bien remplie suffit déjà à récupérer des appels — je vous montre ?"},
+             "objet_b": "Vos concurrents ressortent sur Google, pas {entreprise}",
+             "template": "Bonjour, je reviens vers vous : j'ai cherché « {metier} {ville} » sur Google et vos concurrents ressortent, pas {entreprise}. Bonne nouvelle : même sans site, une fiche Google bien remplie (photos de chantiers, avis, horaires) peut déjà vous amener des appels. {accroche_saison} Je vous montre ce que ça donnerait pour vous ?\n\n{prenom_exp}",
+             "template_court": "Bonjour, je suis {prenom_exp} — je vous avais contacté au sujet de {entreprise}. J'ai cherché « {metier} {ville} » sur Google : vos concurrents ressortent, pas vous. Une fiche Google bien remplie suffit déjà à récupérer des appels — je vous montre ?"},
             {"etape": 3, "delai_jours": 4,
              "objet": "Une idée de site pour {entreprise}",
-             "template": "Bonjour, c'est encore {prenom_exp}. J'ai préparé une idée de site pour {entreprise} — simple, pensé pour récupérer des demandes de devis : {offre}. Vous m'envoyez 5 photos de chantiers, je m'occupe du reste. Je vous l'envoie ? {lien_rdv}",
-             "template_court": "Bonjour, {prenom_exp} à nouveau. J'ai préparé une idée de site pour {entreprise} ({offre}). Je vous l'envoie ? {lien_rdv}"},
+             "objet_b": "J'ai préparé quelque chose pour {entreprise}",
+             "template": "Bonjour, j'ai préparé une idée de site pour {entreprise} — simple, pensé pour récupérer des demandes de devis : {offre}. Vous m'envoyez 5 photos de chantiers, je m'occupe du reste. Je vous l'envoie ? {lien_rdv}\n\n{prenom_exp}",
+             "template_court": "Bonjour, je suis {prenom_exp} — je vous ai contacté au sujet de la visibilité de {entreprise}. J'ai préparé une idée de site ({offre}). Je vous l'envoie ? {lien_rdv}"},
             {"etape": 4, "delai_jours": 3,
              "objet": "Dernier message — {entreprise} sur Google",
+             "objet_b": "J'arrête là ? ({entreprise})",
              "template": "Bonjour,\n\nDernier message de ma part, promis.\n\nJe n'ai trouvé ni site ni fiche Google complète pour {entreprise}. Concrètement : quand quelqu'un cherche « {metier} {ville} », il appelle ceux qu'il trouve — pas vous.\n\nC'est exactement ce que je règle pour les artisans : {offre}.\n\nSi le timing est mauvais, dites-le moi simplement. Sinon, 15 minutes suffisent : {lien_rdv}\n\nBonne journée,\n{prenom_exp}",
-             "template_court": "Bonjour, dernier message promis. Si le timing est mauvais, dites-le moi simplement. Sinon : {lien_rdv}"},
+             "template_court": "Bonjour, dernier message promis ({prenom_exp}, au sujet de la visibilité de {entreprise}). Si le timing est mauvais, dites-le moi simplement. Sinon : {lien_rdv}"},
         ],
     },
     "site_ancien": {
@@ -126,20 +177,24 @@ DEFAULT_SCENARIOS = {
         "etapes": [
             {"etape": 1, "delai_jours": 0,
              "objet": "Le site de {entreprise} mérite un coup de jeune",
-             "template": "Bonjour, je suis {prenom_exp}, je crée des sites pour les artisans. Je suis passé sur {site_web} — beau métier ! Par contre le site mériterait un coup de jeune ({signal}). Ça vous dirait qu'on en parle 2 minutes ?",
+             "objet_b": "Votre site fait-il fuir des clients ?",
+             "template": "Bonjour, je suis {prenom_exp}, je crée des sites pour les artisans. Je suis passé sur {site_web} — beau métier ! Par contre, {argument_vente}. Ça vous dirait qu'on en parle 2 minutes ?",
              "template_court": ""},
             {"etape": 2, "delai_jours": 3,
              "objet": "Le site de {entreprise} : note {note_site}/100",
-             "template": "Bonjour, c'est {prenom_exp}. J'ai analysé le site de {entreprise} : note {note_site}/100. Le vrai problème : quand un client compare « {metier} {ville} » sur Google, un site daté fait fuir en 10 secondes — il appelle le concurrent au site propre. Quelques améliorations simples changeraient la donne. Je vous envoie le détail ?",
-             "template_court": "Bonjour, c'est {prenom_exp}. J'ai analysé {site_web} : note {note_site}/100. Un client qui compare sur Google part en 10 secondes sur un site daté. Je vous envoie le détail des points à corriger ?"},
+             "objet_b": "{note_site}/100 — ce qui coince sur votre site",
+             "template": "Bonjour, je reviens vers vous au sujet du site de {entreprise} : je l'ai analysé, note {note_site}/100. Le vrai problème : quand un client compare « {metier} {ville} » sur Google, un site daté fait fuir en 10 secondes — il appelle le concurrent au site propre. Quelques améliorations simples changeraient la donne. Je vous envoie le détail ?\n\n{prenom_exp}",
+             "template_court": "Bonjour, je suis {prenom_exp} — j'ai analysé {site_web} : note {note_site}/100. Un client qui compare sur Google part en 10 secondes sur un site daté. Je vous envoie le détail des points à corriger ?"},
             {"etape": 3, "delai_jours": 4,
              "objet": "Refaire {site_web} : simple et rapide",
-             "template": "Bonjour, {prenom_exp} à nouveau. Remettre {site_web} au niveau, c'est plus simple que vous ne pensez : {offre}. {accroche_saison} J'ai déjà noté 2-3 améliorations concrètes pour augmenter vos appels entrants. On en parle ? {lien_rdv}",
-             "template_court": "Bonjour, {prenom_exp} à nouveau. Remettre {site_web} au niveau : {offre}. J'ai déjà 2-3 pistes concrètes pour vous. On en parle ? {lien_rdv}"},
+             "objet_b": "2-3 améliorations concrètes pour {entreprise}",
+             "template": "Bonjour, remettre {site_web} au niveau est plus simple que vous ne le pensez : {offre}. {accroche_saison} J'ai déjà noté 2-3 améliorations concrètes pour augmenter vos appels entrants — à commencer par ceci : {argument_vente}. On en parle ? {lien_rdv}\n\n{prenom_exp}",
+             "template_court": "Bonjour, je suis {prenom_exp} — au sujet de {site_web} : {argument_vente}. La remise à niveau est simple et rapide ({offre}). On en parle ? {lien_rdv}"},
             {"etape": 4, "delai_jours": 3,
              "objet": "Dernier message — les pistes pour {entreprise}",
-             "template": "Bonjour,\n\nDernier message de ma part, promis.\n\nJ'ai analysé {site_web} et voici l'essentiel : {signal}. Vous avez déjà fait le plus dur en ayant un site — il manque juste ce qui transforme les visites en demandes de devis.\n\nC'est exactement ce que je fais pour les artisans : {offre}.\n\nSi le timing est mauvais, dites-le moi simplement. Sinon, 15 minutes suffisent : {lien_rdv}\n\nBonne journée,\n{prenom_exp}",
-             "template_court": "Bonjour, dernier message promis. Si le timing est mauvais, dites-le moi simplement. Sinon : {lien_rdv}"},
+             "objet_b": "On en reste là pour {site_web} ?",
+             "template": "Bonjour,\n\nDernier message de ma part, promis.\n\nJ'ai analysé {site_web} et voici l'essentiel : {argument_vente}. Vous avez déjà fait le plus dur en ayant un site — il manque juste ce qui transforme les visites en demandes de devis.\n\nC'est exactement ce que je fais pour les artisans : {offre}.\n\nSi le timing est mauvais, dites-le moi simplement. Sinon, 15 minutes suffisent : {lien_rdv}\n\nBonne journée,\n{prenom_exp}",
+             "template_court": "Bonjour, dernier message promis ({prenom_exp}, au sujet de {site_web}). Si le timing est mauvais, dites-le moi simplement. Sinon : {lien_rdv}"},
         ],
     },
     "signal_chaud": {
@@ -150,20 +205,24 @@ DEFAULT_SCENARIOS = {
         "etapes": [
             {"etape": 1, "delai_jours": 0,
              "objet": "{entreprise} : {signal}",
+             "objet_b": "Une remarque sur {entreprise}",
              "template": "Bonjour, je suis {prenom_exp}, je crée des sites pour les artisans. En regardant {entreprise} j'ai remarqué : {signal}. C'est exactement le genre de situation où une présence web propre fait la différence sur les devis. On échange 2 minutes ?",
              "template_court": ""},
             {"etape": 2, "delai_jours": 2,
              "objet": "Les pistes concrètes pour {entreprise}",
-             "template": "Bonjour, {prenom_exp} ici. Je reviens vers vous au sujet de {entreprise} ({signal}). J'ai déjà quelques pistes concrètes — et c'est rapide à mettre en place : {offre}. Dispo pour un appel cette semaine ? {lien_rdv}",
-             "template_court": "Bonjour, {prenom_exp} ici. Je reviens sur {entreprise} ({signal}). J'ai des pistes concrètes, et c'est rapide : {offre}. Un appel cette semaine ? {lien_rdv}"},
+             "objet_b": "3 pistes rapides pour {entreprise}",
+             "template": "Bonjour, je reviens vers vous au sujet de {entreprise} ({signal}). J'ai déjà quelques pistes concrètes — et c'est rapide à mettre en place : {offre}. Dispo pour un appel cette semaine ? {lien_rdv}\n\n{prenom_exp}",
+             "template_court": "Bonjour, je suis {prenom_exp} — je reviens sur {entreprise} ({signal}). J'ai des pistes concrètes, et c'est rapide : {offre}. Un appel cette semaine ? {lien_rdv}"},
             {"etape": 3, "delai_jours": 3,
              "objet": "On en reste là pour {entreprise} ?",
-             "template": "Bonjour, c'est encore {prenom_exp}. L'opportunité est réelle pour {entreprise} : {signal}. {accroche_saison} Si le timing est mauvais, dites-le moi simplement et je ne vous relancerai plus. Sinon, 15 minutes suffisent : {lien_rdv}",
-             "template_court": "Bonjour, c'est encore {prenom_exp}. L'opportunité est réelle pour {entreprise} : {signal}. Si le timing est mauvais, dites-le moi et j'arrête là. Sinon : {lien_rdv}"},
+             "objet_b": "Mauvais timing ?",
+             "template": "Bonjour, l'opportunité est réelle pour {entreprise} : {signal}. {accroche_saison} Si le timing est mauvais, dites-le moi simplement et je ne vous relancerai plus. Sinon, 15 minutes suffisent : {lien_rdv}\n\n{prenom_exp}",
+             "template_court": "Bonjour, je suis {prenom_exp} — l'opportunité est réelle pour {entreprise} : {signal}. Si le timing est mauvais, dites-le moi et j'arrête là. Sinon : {lien_rdv}"},
             {"etape": 4, "delai_jours": 2,
              "objet": "Dernier message — {entreprise}",
+             "objet_b": "Je ferme votre dossier ?",
              "template": "Bonjour,\n\nDernier message de ma part, promis. Je vous ai contacté au sujet de {entreprise} : {signal}.\n\nC'est exactement le genre de moment où une présence web propre fait la différence sur les devis — et c'est rapide : {offre}.\n\nUn créneau de 15 minutes cette semaine ? {lien_rdv}\n\nBonne journée,\n{prenom_exp}",
-             "template_court": "Bonjour, dernier message promis. Si le timing est mauvais, dites-le moi simplement. Sinon : {lien_rdv}"},
+             "template_court": "Bonjour, dernier message promis ({prenom_exp}, au sujet de {entreprise}). Si le timing est mauvais, dites-le moi simplement. Sinon : {lien_rdv}"},
         ],
     },
     "site_moyen": {
@@ -174,20 +233,24 @@ DEFAULT_SCENARIOS = {
         "etapes": [
             {"etape": 1, "delai_jours": 0,
              "objet": "Votre site {site_web} a du potentiel",
-             "template": "Bonjour, je suis {prenom_exp}, je crée des sites pour les artisans. J'ai vu votre site {site_web}, il a du potentiel mais quelques points pourraient être améliorés pour attirer plus de clients ({signal}). Vous êtes ouvert à un échange rapide ?",
+             "objet_b": "Une question sur le site de {entreprise}",
+             "template": "Bonjour, je suis {prenom_exp}, je crée des sites pour les artisans. J'ai vu votre site {site_web}, il a du potentiel mais quelques points pourraient être améliorés pour attirer plus de clients ({argument_vente}). Vous êtes ouvert à un échange rapide ?",
              "template_court": ""},
             {"etape": 2, "delai_jours": 4,
              "objet": "Audit du site de {entreprise} : note {note_site}/100",
-             "template": "Bonjour, {prenom_exp}. J'ai audité le site de {entreprise} (note {note_site}/100) : il y a des gains rapides possibles pour mieux ressortir quand on cherche « {metier} {ville} » sur Google, et transformer plus de visites en demandes de devis. Je partage l'audit complet si ça vous intéresse.",
-             "template_court": "Bonjour, {prenom_exp}. J'ai audité le site de {entreprise} : note {note_site}/100, avec des gains rapides possibles côté Google et demandes de devis. Je vous partage l'audit ?"},
+             "objet_b": "Ce qui freine {site_web} sur Google",
+             "template": "Bonjour, je reviens vers vous : j'ai audité le site de {entreprise} (note {note_site}/100) et il y a des gains rapides possibles pour mieux ressortir quand on cherche « {metier} {ville} » sur Google, et transformer plus de visites en demandes de devis. Je partage l'audit complet si ça vous intéresse.\n\n{prenom_exp}",
+             "template_court": "Bonjour, je suis {prenom_exp} — j'ai audité le site de {entreprise} : note {note_site}/100, avec des gains rapides possibles côté Google et demandes de devis. Je vous partage l'audit ?"},
             {"etape": 3, "delai_jours": 4,
              "objet": "Les gains rapides pour {site_web}",
-             "template": "Bonjour, {prenom_exp} à nouveau. J'ai identifié des gains rapides pour {site_web} côté visibilité Google et demandes de devis — et si une remise à niveau complète vous tente : {offre}. {accroche_saison} Je vous partage le détail, gratuit et sans engagement. {lien_rdv}",
-             "template_court": "Bonjour, {prenom_exp} à nouveau. J'ai des gains rapides identifiés pour {site_web} (audit gratuit, sans engagement). Je vous partage le détail ? {lien_rdv}"},
+             "objet_b": "Audit gratuit de {site_web} — partant ?",
+             "template": "Bonjour, j'ai identifié des gains rapides pour {site_web} — à commencer par ceci : {argument_vente}. Côté visibilité Google et demandes de devis, ça change vite la donne. Et si une remise à niveau complète vous tente : {offre}. {accroche_saison} Je vous partage le détail, gratuit et sans engagement. {lien_rdv}\n\n{prenom_exp}",
+             "template_court": "Bonjour, je suis {prenom_exp} — j'ai des gains rapides identifiés pour {site_web} ({argument_vente}). Audit gratuit, sans engagement — je vous partage le détail ? {lien_rdv}"},
             {"etape": 4, "delai_jours": 3,
              "objet": "Dernier message — l'audit de {site_web}",
+             "objet_b": "Je vous laisse tranquille après ça",
              "template": "Bonjour,\n\nDernier message de ma part, promis.\n\nJ'ai audité le site de {entreprise} ({site_web}) : il a du potentiel, et quelques gains rapides sont possibles côté visibilité Google et demandes de devis.\n\nJe vous partage volontiers le détail de l'audit — c'est gratuit et sans engagement.\n\nOn en parle 15 minutes ? {lien_rdv}\n\nBonne journée,\n{prenom_exp}",
-             "template_court": "Bonjour, dernier message promis. Si le timing est mauvais, dites-le moi simplement. Sinon : {lien_rdv}"},
+             "template_court": "Bonjour, dernier message promis ({prenom_exp}, au sujet de {site_web}). Si le timing est mauvais, dites-le moi simplement. Sinon : {lien_rdv}"},
         ],
     },
 }
@@ -201,7 +264,8 @@ STATUT_LABELS = {
 
 
 def advance_updates(p: dict, etapes: list[dict]) -> dict:
-    """Champs à $set après un envoi : étape suivante + date de relance, ou séquence épuisée."""
+    """Champs à $set après un envoi : étape suivante + date de relance + canal de
+    l'étape suivante (plan multi-canal), ou séquence épuisée."""
     current = int(p.get("etape_relance", 1))
     updates: dict = {"message_personnalise": "", "derniere_action": f"envoye_etape_{current}"}
     if current >= len(etapes):
@@ -211,6 +275,9 @@ def advance_updates(p: dict, etapes: list[dict]) -> dict:
         delai = int(next_step.get("delai_jours", 3))
         updates["etape_relance"] = current + 1
         updates["date_prochaine_action"] = (datetime.now(timezone.utc) + timedelta(days=delai)).isoformat()
+        plan = p.get("plan_canaux") or canal_plan(p, len(etapes))
+        if plan:
+            updates["canal_contact"] = plan[min(current, len(plan) - 1)]
     return updates
 
 

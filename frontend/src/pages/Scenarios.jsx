@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const VARIABLES = ["{entreprise}", "{ville}", "{metier}", "{site_web}", "{signal}", "{note_site}", "{prenom_exp}", "{lien_rdv}", "{offre}", "{accroche_saison}"];
+const VARIABLES = ["{entreprise}", "{ville}", "{metier}", "{site_web}", "{signal}", "{argument_vente}", "{note_site}", "{prenom_exp}", "{lien_rdv}", "{offre}", "{accroche_saison}"];
 
 export default function Scenarios() {
   const [scenarios, setScenarios] = useState([]);
@@ -38,6 +38,7 @@ export default function Scenarios() {
         delai_jours: Number(e.delai_jours) || 0,
         template: e.template,
         objet: e.objet || "",
+        objet_b: e.objet_b || "",
         template_court: e.template_court || "",
       })),
     });
@@ -54,21 +55,21 @@ export default function Scenarios() {
       </p>
 
       <div
-        data-testid="canal-unique-info"
+        data-testid="multicanal-info"
         className="bg-white border border-slate-200 rounded-sm p-4 mb-6 text-xs text-slate-600 leading-relaxed"
       >
-        <div className="font-semibold text-[#111111] mb-1 text-sm">Canal unique par prospect</div>
-        Le canal est choisi automatiquement selon les coordonnées disponibles, par priorité :{" "}
+        <div className="font-semibold text-[#111111] mb-1 text-sm">Séquence multi-canal</div>
+        Le plan de canaux est construit automatiquement selon les coordonnées disponibles, dans l'ordre{" "}
         <span className="inline-flex items-center gap-1 font-semibold"><EnvelopeSimple size={13} className="text-slate-700" /> Email</span>
-        {" › "}
-        <span className="inline-flex items-center gap-1 font-semibold"><WhatsappLogo size={13} className="text-[#25D366]" /> WhatsApp</span> (mobile 06/07 uniquement)
-        {" › "}
-        <span className="inline-flex items-center gap-1 font-semibold"><LinkedinLogo size={13} className="text-[#0A66C2]" /> LinkedIn</span>
-        {" › "}
-        <span className="inline-flex items-center gap-1 font-semibold"><Phone size={13} className="text-slate-700" /> Téléphone</span> (appel sur fixe).
-        Toute la séquence (étape 1 → dernière relance) reste sur ce même canal.
-        Sans aucun de ces contacts, le prospect n'est pas ajouté.
-        L'objet ci-dessous n'est utilisé que pour les prospects contactés par email (envoi automatique par le pilote).
+        {" → "}
+        <span className="inline-flex items-center gap-1 font-semibold"><WhatsappLogo size={13} className="text-[#25D366]" /> WhatsApp</span> (mobile 06/07)
+        {" → "}
+        <span className="inline-flex items-center gap-1 font-semibold"><LinkedinLogo size={13} className="text-[#0A66C2]" /> LinkedIn</span>.
+        Les étapes 1-2 restent sur le canal principal, puis la séquence change de canal pour relancer l'attention
+        (ex. email, email, WhatsApp, LinkedIn). Un seul contact disponible = toute la séquence dessus,{" "}
+        <span className="inline-flex items-center gap-1 font-semibold"><Phone size={13} className="text-slate-700" /> Téléphone</span> en dernier recours.
+        Les objets A/B ci-dessous ne servent qu'aux étapes envoyées par email : chaque prospect reçoit la variante A ou B (50/50),
+        et les résultats sont comparés dans l'onglet Business.
       </div>
 
       <div className="flex flex-wrap gap-1.5 mb-6">
@@ -126,10 +127,17 @@ export default function Scenarios() {
                 </div>
                 <Input
                   data-testid={`input-objet-${sc.profil}-${e.etape}`}
-                  placeholder="Objet de l'email (utilisé seulement si le prospect est contacté par email)"
+                  placeholder="Objet A — variante principale (email uniquement)"
                   value={e.objet || ""}
                   onChange={(ev) => updateEtape(sc.profil, idx, "objet", ev.target.value)}
                   className="rounded-sm text-sm mb-2"
+                />
+                <Input
+                  data-testid={`input-objet-b-${sc.profil}-${e.etape}`}
+                  placeholder="Objet B — variante alternative pour l'A/B testing (vide = A pour tous)"
+                  value={e.objet_b || ""}
+                  onChange={(ev) => updateEtape(sc.profil, idx, "objet_b", ev.target.value)}
+                  className="rounded-sm text-sm mb-2 border-dashed"
                 />
                 <Textarea
                   data-testid={`textarea-template-${sc.profil}-${e.etape}`}

@@ -5,6 +5,7 @@ import asyncio
 import io
 import logging
 import os
+import random
 import re
 import unicodedata
 import uuid
@@ -23,8 +24,8 @@ from starlette.middleware.cors import CORSMiddleware
 
 from prospection import (
     DEFAULT_SCENARIOS, PROFIL_LABELS, PROFILS, STATUT_LABELS,
-    accroche_saison, advance_updates, determine_canal, determine_profil,
-    render_message, step_template,
+    accroche_saison, advance_updates, canal_plan, determine_canal, determine_profil,
+    pick_objet, render_message, step_template,
 )
 from scraper_core import (
     METIERS, USER_AGENT, as_str, audit_site, build_linkedin_link, build_wa_link,
@@ -137,6 +138,7 @@ class EtapeModel(BaseModel):
     delai_jours: int
     template: str
     objet: str = ""
+    objet_b: str = ""  # variante B de l'objet (A/B testing email)
     template_court: str = ""  # variante 2-3 lignes pour WhatsApp / LinkedIn
 
 
@@ -208,7 +210,11 @@ def prepare_new_prospect(data: dict) -> dict:
     if not p["niveau_conversion"]:
         p["niveau_conversion"] = niveau_from_score(p["score_conversion"])
     p["profil"] = as_str(data.get("profil")) or determine_profil(p)
-    p["canal_contact"] = determine_canal(p)
+    n_etapes = len(DEFAULT_SCENARIOS.get(p["profil"], DEFAULT_SCENARIOS["site_moyen"])["etapes"])
+    plan = canal_plan(p, n_etapes)
+    p["plan_canaux"] = plan
+    p["canal_contact"] = plan[0] if plan else ""
+    p["variante_ab"] = random.choice(["A", "B"])  # A/B testing des objets d'email
     p["entreprise_norm"] = normalize_company_name(p["entreprise"])
     p["tel_digits"] = phone_digits(p["telephone"])
     # Vendabilité du site (argumentaire commercial)
@@ -335,6 +341,65 @@ async def dashboard_business():
                                "ca_contrat": 1, "created_at": 1}
     ).sort("created_at", -1).limit(5).to_list(5)
 
+    # Performance par canal / étape / objet d'email (A/B), à partir de l'historique.
+    # Une réponse est créditée au dernier envoi qui la précède.
+    SEND_TYPES = {"envoye", "email_envoye"}
+    REPLY_TYPES = {"reponse_email", "repondu", "rdv", "gagne"}
+    par_canal: dict[str, dict] = {}
+    par_etape: dict[int, dict] = {}
+    ab_objets = {"A": {"envois": 0, "reponses": 0}, "B": {"envois": 0, "reponses": 0}}
+    objets: dict[tuple, dict] = {}
+
+    async for p in db.prospects.find(
+            {"historique.0": {"$exists": True}}, {"_id": 0, "historique": 1, "statut": 1}):
+        hist = p.get("historique", []) or []
+        sends = [h for h in hist if h.get("type") in SEND_TYPES]
+        if not sends:
+            continue
+        reply_pos = next((i for i, h in enumerate(hist) if h.get("type") in REPLY_TYPES), None)
+        responded = reply_pos is not None or p.get("statut") in ("repondu", "rdv", "gagne", "interesse")
+        credited = None
+        if responded:
+            if reply_pos is not None:
+                prior = [h for h in hist[:reply_pos] if h.get("type") in SEND_TYPES]
+                credited = prior[-1] if prior else sends[0]
+            else:
+                credited = sends[-1]
+
+        for h in sends:
+            canal = h.get("canal") or ("email" if h.get("type") == "email_envoye" else "autre")
+            try:
+                etape = int(h.get("etape", 1) or 1)
+            except (TypeError, ValueError):
+                etape = 1
+            is_credited = h is credited
+            par_canal.setdefault(canal, {"envois": 0, "reponses": 0})["envois"] += 1
+            par_etape.setdefault(etape, {"envois": 0, "reponses": 0})["envois"] += 1
+            if is_credited:
+                par_canal[canal]["reponses"] += 1
+                par_etape[etape]["reponses"] += 1
+            if canal == "email":
+                variante = h.get("variante")
+                if variante in ("A", "B"):
+                    ab_objets[variante]["envois"] += 1
+                    if is_credited:
+                        ab_objets[variante]["reponses"] += 1
+                objet_t = as_str(h.get("objet_template"))
+                if objet_t:
+                    key = (objet_t, variante or "")
+                    o = objets.setdefault(key, {"objet": objet_t, "variante": variante or "",
+                                                "envois": 0, "reponses": 0})
+                    o["envois"] += 1
+                    if is_credited:
+                        o["reponses"] += 1
+
+    def _rate(d: dict) -> dict:
+        d["taux"] = round(d["reponses"] / d["envois"] * 100, 1) if d["envois"] else 0.0
+        return d
+
+    top_objets = sorted((_rate(o) for o in objets.values()),
+                        key=lambda o: (-o["envois"], -o["taux"]))[:12]
+
     return {
         "entonnoir": {
             "total": total,
@@ -355,6 +420,10 @@ async def dashboard_business():
         "taux_reponse": round(repondus / contactes * 100, 1) if contactes else 0,
         "taux_rdv": round(rdv / repondus * 100, 1) if repondus else 0,
         "taux_signature": round(gagnes / rdv * 100, 1) if rdv else 0,
+        "par_canal": {c: _rate(v) for c, v in par_canal.items()},
+        "par_etape": [{"etape": k, **_rate(v)} for k, v in sorted(par_etape.items())],
+        "ab_objets": {k: _rate(v) for k, v in ab_objets.items()},
+        "top_objets": top_objets,
     }
 
 
@@ -369,7 +438,7 @@ async def get_queue(limit: int = 50):
         {"statut": "a_contacter", "date_prochaine_action": {"$lte": now_iso()},
          "canal_contact": {"$in": ["whatsapp", "linkedin", "telephone"]}},
         {"_id": 0},
-    ).sort("score_conversion", -1).limit(limit)
+    ).sort([("score_vendabilite", -1), ("score_conversion", -1)]).limit(limit)
     items = []
     async for p in cursor:
         items.append(await build_queue_item(p, settings))
@@ -407,8 +476,16 @@ async def get_prospect(prospect_id: str):
     settings = await get_settings()
     item = await build_queue_item(p, settings)
     scenario = await get_scenario(p.get("profil", "site_moyen"))
-    apercu = [{"etape": e["etape"], "canal": item["canal"], "delai_jours": e["delai_jours"],
-               "message": render_message(step_template(e, item["canal"]), p, settings)} for e in scenario.get("etapes", [])]
+    etapes = scenario.get("etapes", [])
+    plan = p.get("plan_canaux") or canal_plan(p, len(etapes) or 4)
+    apercu = []
+    for i, e in enumerate(etapes):
+        canal_step = plan[i] if i < len(plan) else item["canal"]
+        entry = {"etape": e["etape"], "canal": canal_step, "delai_jours": e["delai_jours"],
+                 "message": render_message(step_template(e, canal_step), p, settings)}
+        if canal_step == "email":
+            entry["objet"] = render_message(pick_objet(e, p.get("variante_ab", "A")), p, settings)
+        apercu.append(entry)
     item["sequence"] = apercu
     return item
 
@@ -429,8 +506,12 @@ async def update_prospect(prospect_id: str, body: ProspectUpdate):
             raise HTTPException(404, "Prospect introuvable")
         deja_contacte = any(h.get("type") in ("envoye", "email_envoye")
                             for h in p.get("historique", []))
-        if not deja_contacte:  # le canal est figé dès le premier envoi de la séquence
-            updates["canal_contact"] = determine_canal({**p, **updates})
+        if not deja_contacte:  # le plan multi-canal est figé dès le premier envoi
+            merged = {**p, **updates}
+            scenario = await get_scenario(merged.get("profil", "site_moyen"))
+            plan = canal_plan(merged, len(scenario.get("etapes", [])) or 4)
+            updates["plan_canaux"] = plan
+            updates["canal_contact"] = plan[0] if plan else ""
     res = await db.prospects.update_one({"id": prospect_id}, {"$set": updates})
     if not res.matched_count:
         raise HTTPException(404, "Prospect introuvable")
@@ -464,6 +545,9 @@ async def prospect_action(prospect_id: str, body: ActionRequest):
             event["canal"] = p.get("canal_contact", "")
             event["message"] = as_str(p.get("message_personnalise")) or render_message(
                 step_template(etapes[idx], event["canal"]), p, settings)
+            if event["canal"] == "email":
+                event["variante"] = p.get("variante_ab", "A")
+                event["objet_template"] = pick_objet(etapes[idx], p.get("variante_ab", "A"))
         updates.update(advance_updates(p, etapes))
     elif action == "skip":
         updates["date_prochaine_action"] = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
@@ -1535,6 +1619,34 @@ async def migrate_vendabilite():
         logger.info(f"Migration vendabilité : {n} prospect(s) mis à jour")
 
 
+async def migrate_multicanal():
+    """Plan multi-canal (Email → WhatsApp → LinkedIn) + variante A/B des objets.
+
+    Idempotente : ne touche que les prospects sans plan_canaux / variante_ab.
+    Les prospects encore « à contacter » voient leur canal courant réaligné sur
+    le plan (étape en cours) — ils basculeront entre autopilot et file manuelle.
+    """
+    n = 0
+    async for p in db.prospects.find(
+            {"$or": [{"plan_canaux": {"$exists": False}}, {"variante_ab": {"$exists": False}}]},
+            {"_id": 0}):
+        updates: dict = {}
+        if "variante_ab" not in p:
+            updates["variante_ab"] = random.choice(["A", "B"])
+        if "plan_canaux" not in p:
+            plan = canal_plan(p)
+            updates["plan_canaux"] = plan
+            if plan and p.get("statut") == "a_contacter":
+                idx = min(max(int(p.get("etape_relance", 1)) - 1, 0), len(plan) - 1)
+                updates["canal_contact"] = plan[idx]
+        if updates:
+            await db.prospects.update_one({"id": p["id"]}, {"$set": updates})
+            n += 1
+    if n:
+        logger.info(f"Migration multi-canal : {n} prospect(s) mis à jour")
+
+
+
 @app.on_event("startup")
 async def seed():
     for profil, sc in DEFAULT_SCENARIOS.items():
@@ -1564,6 +1676,7 @@ async def seed():
         logger.exception("Restauration auto échouée : %s", exc)
     # Calcul vendabilité après restauration éventuelle (prospects restaurés inclus)
     await migrate_vendabilite()
+    await migrate_multicanal()
     asyncio.create_task(autopilot_loop(db))
     asyncio.create_task(backup_loop(db))
 

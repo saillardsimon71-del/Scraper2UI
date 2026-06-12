@@ -208,7 +208,7 @@ export default function FileDuJour() {
           <h1 className="text-4xl tracking-tighter font-bold text-[#111111]">File du jour</h1>
           <p className="text-sm text-slate-500 mt-1">
             {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })} —
-            actions manuelles WhatsApp, LinkedIn & appels, triées par score.
+            actions manuelles WhatsApp, LinkedIn & appels, triées par vendabilité (les plus vendables d'abord).
           </p>
         </div>
       </div>
@@ -276,10 +276,10 @@ export default function FileDuJour() {
                 <li key={p.id} data-testid="queue-row" className="px-5 py-4 hover:bg-slate-50 transition-colors duration-150">
                   <div className="flex items-center gap-4">
                     <div className="w-12 text-center shrink-0">
-                      <div className={`font-mono font-bold text-lg tabular-nums ${p.score_conversion >= 80 ? "text-amber-600" : p.score_conversion >= 60 ? "text-orange-500" : p.score_conversion >= 30 ? "text-blue-600" : "text-slate-500"}`}>
-                        {p.score_conversion}
+                      <div className={`font-mono font-bold text-lg tabular-nums ${(p.score_vendabilite || 0) >= 70 ? "text-amber-600" : (p.score_vendabilite || 0) >= 45 ? "text-orange-500" : (p.score_vendabilite || 0) >= 20 ? "text-blue-600" : "text-slate-500"}`}>
+                        {p.score_vendabilite ?? p.score_conversion}
                       </div>
-                      <div className="text-[10px] uppercase text-slate-400">score</div>
+                      <div className="text-[10px] uppercase text-slate-400">vendable</div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -293,7 +293,7 @@ export default function FileDuJour() {
                         </Badge>
                         {p.label_vendabilite && (
                           <Badge variant="outline" className="rounded-sm text-[11px] bg-amber-50 text-amber-800 border-amber-200" title={p.raisons_vendabilite?.join(" · ")}>
-                            {p.label_vendabilite}
+                            {p.label_vendabilite}{p.score_vendabilite ? ` · ${p.score_vendabilite}` : ""}
                           </Badge>
                         )}
                         <span className="text-xs text-slate-400 font-mono">

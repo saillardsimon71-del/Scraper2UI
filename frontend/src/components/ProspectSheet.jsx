@@ -173,6 +173,11 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
                 <Badge variant="outline" className={`rounded-sm ${STATUT_STYLES[p.statut] || ""}`}>
                   {STATUT_LABELS[p.statut]}
                 </Badge>
+                {p.variante_ab && (
+                  <Badge data-testid="badge-variante-ab" variant="outline" className="rounded-sm bg-slate-50 text-slate-600" title="Variante d'objet email assignée (A/B testing)">
+                    Objet {p.variante_ab}
+                  </Badge>
+                )}
               </div>
             </SheetHeader>
 
@@ -343,6 +348,11 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
                   <div className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-500 mb-2">
                     Séquence complète ({PROFIL_LABELS[p.profil]})
                   </div>
+                  {p.plan_canaux?.length > 0 && (
+                    <div data-testid="plan-canaux" className="text-xs text-slate-500 font-mono mb-2">
+                      Plan multi-canal : {p.plan_canaux.join(" → ")}
+                    </div>
+                  )}
                   <div className="space-y-2">
                     {data.sequence.map((s) => (
                       <div
@@ -352,6 +362,9 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
                         <div className="font-semibold text-slate-700 mb-1">
                           Étape {s.etape} · {s.canal} · {s.delai_jours === 0 ? "J0" : `J+${s.delai_jours} après précédent`}
                         </div>
+                        {s.objet && (
+                          <div className="text-slate-400 mb-1">Objet : <span className="text-slate-600">{s.objet}</span></div>
+                        )}
                         <p className="text-slate-500 leading-relaxed">{s.message}</p>
                       </div>
                     ))}

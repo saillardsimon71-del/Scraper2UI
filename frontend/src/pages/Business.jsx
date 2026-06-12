@@ -7,8 +7,10 @@ import {
   ChartBar,
   ArrowRight,
   Users,
+  Flask,
 } from "@phosphor-icons/react";
 import api from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
 
 function KpiCard({ label, value, sub, accent, icon: Icon }) {
   return (
@@ -50,6 +52,43 @@ const PROFIL_LABELS = {
   site_moyen: "Site moyen",
 };
 
+const CANAL_LABELS = {
+  email: "Email",
+  whatsapp: "WhatsApp",
+  linkedin: "LinkedIn",
+  telephone: "Téléphone",
+  autre: "Autre",
+};
+
+function PerfTable({ rows, firstCol, testIdPrefix }) {
+  return (
+    <table className="w-full text-sm">
+      <thead>
+        <tr className="text-xs text-slate-400 text-left border-b border-slate-100">
+          <th className="pb-2 font-medium">{firstCol}</th>
+          <th className="pb-2 font-medium text-right">Envois</th>
+          <th className="pb-2 font-medium text-right">Réponses</th>
+          <th className="pb-2 font-medium text-right">Taux</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-slate-50">
+        {rows.map((r) => (
+          <tr key={r.key} data-testid={`${testIdPrefix}-${r.key}`}>
+            <td className="py-2.5 text-slate-700">{r.label}</td>
+            <td className="py-2.5 text-right font-mono text-slate-500">{r.envois}</td>
+            <td className="py-2.5 text-right font-mono text-slate-500">{r.reponses}</td>
+            <td className="py-2.5 text-right">
+              <span className={`font-mono font-semibold ${r.taux >= 10 ? "text-emerald-600" : "text-slate-500"}`}>
+                {r.taux}%
+              </span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 export default function Business() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -71,7 +110,14 @@ export default function Business() {
   if (!data) return null;
 
   const { entonnoir, ca, raisons_refus, par_profil, derniers_gagnes,
-    taux_reponse, taux_rdv, taux_signature } = data;
+    taux_reponse, taux_rdv, taux_signature,
+    par_canal = {}, par_etape = [], ab_objets = {}, top_objets = [] } = data;
+
+  const abA = ab_objets.A || { envois: 0, reponses: 0, taux: 0 };
+  const abB = ab_objets.B || { envois: 0, reponses: 0, taux: 0 };
+  const abLeader = abA.envois > 0 && abB.envois > 0
+    ? (abA.taux === abB.taux ? null : (abA.taux > abB.taux ? "A" : "B"))
+    : null;
 
   return (
     <div className="p-8 fade-up">
@@ -239,6 +285,105 @@ export default function Business() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Performance par canal & par étape */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <div className="bg-white border border-slate-200 rounded-sm p-6" data-testid="perf-canal-card">
+          <div className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-500 mb-5">
+            Performance par canal
+          </div>
+          {Object.keys(par_canal).length === 0 ? (
+            <div className="text-sm text-slate-400 italic">Pas encore d'envois enregistrés.</div>
+          ) : (
+            <PerfTable
+              testIdPrefix="perf-canal-row"
+              firstCol="Canal"
+              rows={Object.entries(par_canal).map(([canal, s]) => ({
+                key: canal, label: CANAL_LABELS[canal] || canal, ...s,
+              }))}
+            />
+          )}
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-sm p-6" data-testid="perf-etape-card">
+          <div className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-500 mb-5">
+            Performance par étape de séquence
+          </div>
+          {par_etape.length === 0 ? (
+            <div className="text-sm text-slate-400 italic">Pas encore d'envois enregistrés.</div>
+          ) : (
+            <PerfTable
+              testIdPrefix="perf-etape-row"
+              firstCol="Étape"
+              rows={par_etape.map((s) => ({
+                key: s.etape, label: `Étape ${s.etape}`, ...s,
+              }))}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* A/B testing des objets d'email */}
+      <div className="bg-white border border-slate-200 rounded-sm p-6 mt-6" data-testid="ab-testing-card">
+        <div className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-500 mb-2 flex items-center gap-2">
+          <Flask size={14} /> A/B testing — objets d'email
+        </div>
+        <p className="text-xs text-slate-400 mb-5">
+          Chaque prospect reçoit la variante A ou B (assignée 50/50 à sa création). Comparez les taux pour garder la meilleure.
+        </p>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {[["A", abA], ["B", abB]].map(([v, s]) => (
+            <div
+              key={v}
+              data-testid={`ab-variant-${v}`}
+              className={`border rounded-sm p-4 ${abLeader === v ? "border-emerald-300 bg-emerald-50/50" : "border-slate-200"}`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-heading font-bold text-lg">Variante {v}</span>
+                {abLeader === v && (
+                  <Badge className="bg-emerald-600 text-white rounded-sm text-[10px]">En tête 🏆</Badge>
+                )}
+              </div>
+              <div className="font-mono text-3xl font-bold mt-2 tabular-nums">{s.taux}%</div>
+              <div className="text-xs text-slate-400 mt-1">{s.reponses} réponse(s) / {s.envois} envoi(s)</div>
+            </div>
+          ))}
+        </div>
+        {top_objets.length === 0 ? (
+          <div className="text-sm text-slate-400 italic">
+            Les stats par objet apparaîtront dès les prochains envois d'emails (pilote automatique ou manuel).
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-xs text-slate-400 text-left border-b border-slate-100">
+                <th className="pb-2 font-medium">Objet (template)</th>
+                <th className="pb-2 font-medium text-center">Var.</th>
+                <th className="pb-2 font-medium text-right">Envois</th>
+                <th className="pb-2 font-medium text-right">Réponses</th>
+                <th className="pb-2 font-medium text-right">Taux</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {top_objets.map((o, i) => (
+                <tr key={i} data-testid="ab-objet-row">
+                  <td className="py-2.5 text-slate-700 font-mono text-xs">{o.objet}</td>
+                  <td className="py-2.5 text-center">
+                    <Badge variant="outline" className="rounded-sm text-[10px]">{o.variante || "—"}</Badge>
+                  </td>
+                  <td className="py-2.5 text-right font-mono text-slate-500">{o.envois}</td>
+                  <td className="py-2.5 text-right font-mono text-slate-500">{o.reponses}</td>
+                  <td className="py-2.5 text-right">
+                    <span className={`font-mono font-semibold ${o.taux >= 10 ? "text-emerald-600" : "text-slate-500"}`}>
+                      {o.taux}%
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

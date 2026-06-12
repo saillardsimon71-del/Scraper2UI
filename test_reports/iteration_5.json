@@ -1,0 +1,28 @@
+{
+  "summary": "Itération 5 — Machine de guerre (multi-canal, A/B objets, vendabilité, suppression « Simon ici », {argument_vente}). Backend : 25/25 pytest passent (100%) — 13 unit tests (test_machine_guerre.py) + 12 nouveaux tests d'intégration API (test_iteration5_api.py) couvrant GET /api/queue trié par vendabilité, GET /api/dashboard/business avec par_canal/par_etape/ab_objets/top_objets, GET /api/scenarios v3 + objet_b non vide + pas d'« interdits Simon », PUT /api/scenarios persiste objet_b, POST /api/import crée plan_canaux=['email','email','whatsapp','email'] + variante_ab, double action envoye bascule canal email→whatsapp avec historique enrichi (canal/variante/objet_template), GET /api/prospects/{id}.sequence affiche canal+objet par étape, PATCH recalcule plan_canaux si tel change, {argument_vente} injecté (« site obsolète (30/100) »), régression dashboard/stats/list/actions OK. Frontend : 4/4 pages validées — File du jour (sous-titre « triées par vendabilité », libellé « vendable »), Business (perf-canal-card + perf-etape-card + ab-testing-card + ab-variant-A + ab-variant-B tous présents avec données), /scenarios (multicanal-info présent, 4 tabs, 4 input-objet + 4 input-objet-b par profil actif, save-scenario button), fiche prospect (badge-variante-ab=« Objet B », plan-canaux=« email → email → whatsapp → email », argument vente rendu dans le message d'aperçu). Note : la review_request mentionnait /sequences mais la route réelle est /scenarios (sidebar « Séquences » → /scenarios) — pas un bug. Aucun bug détecté. Données de test (TEST_UI5_*, TEST_ITER5_*) toutes nettoyées en fin de test.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iteration5_api.py",
+    "/app/backend/tests/test_machine_guerre.py",
+    "/app/test_reports/pytest/iteration5_results.xml"
+  ],
+  "action_items": [
+    "Aucun blocage. Tous les flux iter5 valident la spec. La review_request mentionne la route /sequences mais l'app expose /scenarios (sidebar « Séquences » → /scenarios) — clarifier dans la doc utilisateur si nécessaire, sans changement code requis."
+  ],
+  "critical_code_review_comments": [
+    "server.py atteint maintenant 1687 lignes — la modularisation suggérée en iter3/4 (extraction routes settings/scenarios/import/IA) reste pertinente, surtout que dashboard/business contient désormais une logique d'agrégation A/B non triviale (l.346-401).",
+    "PUT /api/scenarios/{profil} reconstruit doc avec base = DEFAULT_SCENARIOS (label/description figés en code, ligne 859) — si l'admin renomme un profil, il faudra adapter. OK pour l'instant car PROFILS est fermé.",
+    "Le calcul de la queue (server.py l.441) sort sur (score_vendabilite desc, score_conversion desc) mais MongoDB ne garantit pas un tri stable en cas d'égalité — pour rendre la file déterministe, ajouter created_at en 3e clé.",
+    "Frontend Scenarios.jsx render un seul profil à la fois via Tabs (comportement validé en iter4) — bon UX mais limite la couverture playwright sans itérer onglet par onglet."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration5_api.py (nouveau, 12 tests d'intégration API)"
+  ],
+  "success_rate": {"backend": "100% (25/25)", "frontend": "100% (toutes pages OK, 0 pageerror)"},
+  "test_credentials": "N/A — pas d'auth.",
+  "seed_data_creation": "Prospects de test créés via /api/import pendant les tests : TEST_ITER5_QueueLo/QueueHi/Multi/Bascule/Sequence/Patch/ArgVente/Actions/Perdu + TEST_UI5_Multi/WhatsApp. Tous supprimés en fin de test (DELETE /api/prospects/{id}) — vérification finale GET /api/prospects?q=TEST_ retourne 0 items. Scénario site_moyen modifié temporairement via PUT puis restauré dans le test_put_scenario_persists_objet_b (try/finally). Aucune pollution résiduelle.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Tous les flux iter5 validés bout-en-bout (backend + UI). Le frontend route /sequences NE EXISTE PAS — utiliser /scenarios pour la page Séquences. Les 135 prospects réels (canal email majoritairement) n'ont pas été touchés. L'autopilot n'a PAS été déclenché (interdiction explicite — envoi de vrais emails). Le test test_put_scenario_persists_objet_b restaure systématiquement le scénario d'origine. Le fichier de tests d'intégration test_iteration5_api.py charge REACT_APP_BACKEND_URL depuis frontend/.env via python-dotenv (pour fonctionner hors environnement supervisor)."
+}
