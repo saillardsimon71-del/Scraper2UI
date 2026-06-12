@@ -11,7 +11,7 @@ import {
   Warning,
   Leaf,
   Bell,
-  TrendingUp,
+  TrendUp,
   CurrencyEur,
   X,
 } from "@phosphor-icons/react";
@@ -238,7 +238,7 @@ export default function FileDuJour() {
           />
           <div className="bg-white border border-slate-200 p-5 rounded-sm">
             <div className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-500 mb-3 flex items-center gap-1.5">
-              <TrendingUp size={13} /> Entonnoir
+              <TrendUp size={13} /> Entonnoir
             </div>
             <div className="space-y-1.5 text-xs text-slate-600">
               {[

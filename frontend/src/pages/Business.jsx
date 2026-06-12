@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
-  TrendingUp,
+  TrendUp,
   CurrencyEur,
   Trophy,
   ChartBar,
@@ -93,7 +93,7 @@ export default function Business() {
           label="Panier moyen"
           value={ca.moyen > 0 ? `${ca.moyen.toLocaleString("fr-FR")} €` : "—"}
           sub="par contrat signé"
-          icon={TrendingUp}
+          icon={TrendUp}
         />
         <KpiCard
           label="Taux de réponse"
