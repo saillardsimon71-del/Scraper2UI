@@ -438,7 +438,7 @@ async def get_queue(limit: int = 50):
         {"statut": "a_contacter", "date_prochaine_action": {"$lte": now_iso()},
          "canal_contact": {"$in": ["whatsapp", "linkedin", "telephone"]}},
         {"_id": 0},
-    ).sort([("score_vendabilite", -1), ("score_conversion", -1)]).limit(limit)
+    ).sort([("score_vendabilite", -1), ("score_conversion", -1), ("created_at", -1)]).limit(limit)
     items = []
     async for p in cursor:
         items.append(await build_queue_item(p, settings))
