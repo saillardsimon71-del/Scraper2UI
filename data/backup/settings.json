@@ -1,6 +1,11 @@
 [
   {
     "_id": "global",
+    "autopilot_actif": false,
+    "autopilot_heure_debut": 9,
+    "autopilot_heure_fin": 18,
+    "autopilot_jours_ouvres": true,
+    "autopilot_quota_jour": 250,
     "email_expediteur": "simon@sitequivend.fr",
     "email_reponse": "simon@sitequivend.fr",
     "imap_folder": "INBOX",
