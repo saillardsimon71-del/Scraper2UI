@@ -1620,30 +1620,33 @@ async def migrate_vendabilite():
 
 
 async def migrate_multicanal():
-    """Plan multi-canal (Email → WhatsApp → LinkedIn) + variante A/B des objets.
+    """Plan de canaux + variante A/B des objets (idempotente).
 
-    Idempotente : ne touche que les prospects sans plan_canaux / variante_ab.
-    Les prospects encore « à contacter » voient leur canal courant réaligné sur
-    le plan (étape en cours) — ils basculeront entre autopilot et file manuelle.
+    - Prospects sans plan_canaux / variante_ab : champs ajoutés.
+    - Prospects avec un ancien plan multi-canal (rotation) : recalcul en plan
+      mono-canal (décision utilisateur : toute la séquence sur le même canal).
     """
     n = 0
-    async for p in db.prospects.find(
-            {"$or": [{"plan_canaux": {"$exists": False}}, {"variante_ab": {"$exists": False}}]},
-            {"_id": 0}):
+    query = {"$or": [
+        {"plan_canaux": {"$exists": False}},
+        {"variante_ab": {"$exists": False}},
+        # ancien plan avec rotation de canaux → à réaligner en mono-canal
+        {"$expr": {"$gt": [{"$size": {"$setUnion": [{"$ifNull": ["$plan_canaux", []]}, []]}}, 1]}},
+    ]}
+    async for p in db.prospects.find(query, {"_id": 0}):
         updates: dict = {}
         if "variante_ab" not in p:
             updates["variante_ab"] = random.choice(["A", "B"])
-        if "plan_canaux" not in p:
-            plan = canal_plan(p)
+        plan = canal_plan(p)
+        if plan != p.get("plan_canaux"):
             updates["plan_canaux"] = plan
-            if plan and p.get("statut") == "a_contacter":
-                idx = min(max(int(p.get("etape_relance", 1)) - 1, 0), len(plan) - 1)
-                updates["canal_contact"] = plan[idx]
+        if plan and p.get("statut") == "a_contacter" and p.get("canal_contact") != plan[0]:
+            updates["canal_contact"] = plan[0]
         if updates:
             await db.prospects.update_one({"id": p["id"]}, {"$set": updates})
             n += 1
     if n:
-        logger.info(f"Migration multi-canal : {n} prospect(s) mis à jour")
+        logger.info(f"Migration plan de canaux : {n} prospect(s) mis à jour")
 
 
 

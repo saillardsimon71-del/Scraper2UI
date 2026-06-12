@@ -6,7 +6,7 @@ Vérifie via le backend réel (REACT_APP_BACKEND_URL) :
 - GET /api/scenarios v3 + objet_b non vide + pas de « Simon ici »
 - PUT /api/scenarios persiste objet_b
 - POST /api/import (CSV mobile+email) → plan multi-canal + variante_ab
-- POST /api/prospects/{id}/action « envoye » 2x → bascule canal email→whatsapp,
+- POST /api/prospects/{id}/action « envoye » 2x → étape 3, canal stable (canal unique),
   historique avec canal/variante/objet_template
 - GET /api/prospects/{id}.sequence (canal par étape + objet)
 - PATCH /api/prospects/{id} recalcule plan_canaux si tel change
@@ -164,9 +164,9 @@ def test_put_scenario_persists_objet_b(session):
                     json={"etapes": backup["etapes"]}, timeout=15)
 
 
-# -------------------- 5) POST /api/import : prospect mobile+email = multi-canal
+# -------------------- 5) POST /api/import : canal unique (email prioritaire)
 
-def test_import_creates_multicanal_prospect(session):
+def test_import_creates_monocanal_prospect(session):
     name = "TEST_ITER5_Multi"
     csv = (
         "entreprise;metier;ville;telephone;email\n"
@@ -177,14 +177,15 @@ def test_import_creates_multicanal_prospect(session):
     p = _find_by_entreprise(session, name)
     assert p, "Prospect non créé"
     CREATED_IDS.append(p["id"])
-    assert p["plan_canaux"] == ["email", "email", "whatsapp", "email"], p["plan_canaux"]
+    # Canal unique : même avec un mobile, toute la séquence reste sur email
+    assert p["plan_canaux"] == ["email"] * 4, p["plan_canaux"]
     assert p["canal_contact"] == "email"
     assert p["variante_ab"] in ("A", "B"), p.get("variante_ab")
 
 
-# -------------------- 6) Multi-canal : 2 actions envoye → étape 3 + bascule whatsapp
+# -------------------- 6) Canal unique : 2 actions envoye → étape 3, canal stable
 
-def test_multi_canal_two_sends_then_whatsapp(session):
+def test_canal_stable_after_two_sends(session):
     name = "TEST_ITER5_Bascule"
     csv = (
         "entreprise;metier;ville;telephone;email\n"
@@ -201,14 +202,14 @@ def test_multi_canal_two_sends_then_whatsapp(session):
     assert r.status_code == 200
     p1 = r.json()
     assert p1["etape_relance"] == 2
-    assert p1["canal_contact"] == "email"  # étape 2 = email
+    assert p1["canal_contact"] == "email"
 
-    # Send 2
+    # Send 2 — le canal ne change PAS (canal unique pour toute la séquence)
     r = session.post(f"{API}/prospects/{pid}/action", json={"type": "envoye"}, timeout=10)
     assert r.status_code == 200
     p2 = r.json()
     assert p2["etape_relance"] == 3
-    assert p2["canal_contact"] == "whatsapp", f"Attendu whatsapp, got {p2['canal_contact']}"
+    assert p2["canal_contact"] == "email", f"Attendu email (canal unique), got {p2['canal_contact']}"
 
     # Historique : 2 events 'envoye' avec canal=email, variante, objet_template
     sends = [h for h in p2.get("historique", []) if h.get("type") == "envoye"]
@@ -236,8 +237,8 @@ def test_prospect_sequence_has_canal_and_objet(session):
     item = r.json()
     seq = item.get("sequence")
     assert isinstance(seq, list) and len(seq) >= 4
-    # plan_canaux attendu : email/email/whatsapp/email
-    expected = ["email", "email", "whatsapp", "email"]
+    # Canal unique : toutes les étapes sur email
+    expected = ["email"] * 4
     actual = [s["canal"] for s in seq[:4]]
     assert actual == expected, f"Sequence canaux : attendu {expected}, got {actual}"
     # étapes email ont un champ 'objet'
@@ -246,27 +247,27 @@ def test_prospect_sequence_has_canal_and_objet(session):
             assert s.get("objet"), f"objet manquant pour étape email {s['etape']}"
 
 
-# -------------------- 8) PATCH recalcule plan_canaux si tel change (jamais contacté)
+# -------------------- 8) PATCH recalcule plan_canaux si contact change (jamais contacté)
 
 def test_patch_recomputes_plan_canaux(session):
     name = "TEST_ITER5_Patch"
     csv = (
-        "entreprise;metier;ville;telephone;email\n"
-        f"{name};menuisier;Toulouse;;patch@example.test\n"
+        "entreprise;metier;ville;telephone\n"
+        f"{name};menuisier;Toulouse;06 77 77 77 77\n"
     )
     assert _import_csv(session, csv).status_code == 200
     p = _find_by_entreprise(session, name)
     assert p
     CREATED_IDS.append(p["id"])
-    # Initial : email seul (pas de tel)
-    assert p["plan_canaux"] == ["email"] * 4
+    # Initial : mobile seul → whatsapp
+    assert p["plan_canaux"] == ["whatsapp"] * 4
 
-    # PATCH avec un mobile
+    # PATCH avec un email → l'email devient prioritaire pour toute la séquence
     r = session.patch(f"{API}/prospects/{p['id']}",
-                      json={"telephone": "06 77 77 77 77"}, timeout=10)
+                      json={"email": "patch@example.test"}, timeout=10)
     assert r.status_code == 200, r.text
     p2 = r.json()
-    assert p2["plan_canaux"] == ["email", "email", "whatsapp", "email"], p2["plan_canaux"]
+    assert p2["plan_canaux"] == ["email"] * 4, p2["plan_canaux"]
     assert p2["canal_contact"] == "email"
 
 

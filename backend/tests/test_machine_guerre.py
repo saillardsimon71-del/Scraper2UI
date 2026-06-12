@@ -15,19 +15,21 @@ def test_canal_plan_email_seul():
     assert canal_plan(p, 4) == ["email"] * 4
 
 
-def test_canal_plan_trois_canaux():
+def test_canal_plan_trois_canaux_reste_sur_email():
+    """Canal unique : même avec mobile + LinkedIn, toute la séquence reste sur email."""
     p = {"email": "x@y.fr", "telephone": "+33 6 12 34 56 78", "linkedin_url": "https://linkedin.com/in/x"}
-    assert canal_plan(p, 4) == ["email", "email", "whatsapp", "linkedin"]
+    assert canal_plan(p, 4) == ["email"] * 4
+    assert available_canaux(p) == ["email", "whatsapp", "linkedin"]
 
 
 def test_canal_plan_email_mobile():
     p = {"email": "x@y.fr", "telephone": "06 12 34 56 78", "linkedin_url": ""}
-    assert canal_plan(p, 4) == ["email", "email", "whatsapp", "email"]
+    assert canal_plan(p, 4) == ["email"] * 4
 
 
 def test_canal_plan_sans_email():
     p = {"email": "", "telephone": "06 98 76 54 32", "linkedin_url": "https://linkedin.com/in/x"}
-    assert canal_plan(p, 4) == ["whatsapp", "whatsapp", "linkedin", "whatsapp"]
+    assert canal_plan(p, 4) == ["whatsapp"] * 4
 
 
 def test_canal_plan_fixe_seul():
@@ -40,13 +42,14 @@ def test_canal_plan_aucun_contact():
     assert canal_plan({"email": "", "telephone": "", "linkedin_url": ""}, 4) == []
 
 
-def test_advance_updates_bascule_canal():
+def test_advance_updates_canal_stable():
+    """Canal unique : après un envoi, le canal de l'étape suivante ne change pas."""
     etapes = DEFAULT_SCENARIOS["site_moyen"]["etapes"]
-    p = {"etape_relance": 2, "plan_canaux": ["email", "email", "whatsapp", "linkedin"],
+    p = {"etape_relance": 2, "plan_canaux": ["email", "email", "email", "email"],
          "canal_contact": "email"}
     u = advance_updates(p, etapes)
     assert u["etape_relance"] == 3
-    assert u["canal_contact"] == "whatsapp"
+    assert u["canal_contact"] == "email"
 
 
 def test_advance_updates_derniere_etape_epuise():

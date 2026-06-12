@@ -12,9 +12,13 @@
     "imap_host": "ssl0.ovh.net",
     "imap_port": 993,
     "imap_user": "simon@sitequivend.fr",
+    "lien_rdv": "https://calendly.com/sitequivend/30min",
     "migration_canal_unique": true,
     "migration_scoring_v2": true,
+    "offre": "",
     "prenom_expediteur": "Simon",
+    "sendgrid_api_key": "***REDACTED***",
+    "serper_api_key": "***REDACTED***",
     "webhook_token": "***REDACTED***"
   }
 ]

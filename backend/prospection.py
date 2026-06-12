@@ -59,27 +59,17 @@ def available_canaux(p: dict) -> list[str]:
 
 
 def canal_plan(p: dict, n_etapes: int = 4) -> list[str]:
-    """Plan multi-canal de la séquence (Email → WhatsApp → LinkedIn).
+    """Plan de canaux de la séquence : CANAL UNIQUE du début à la fin.
 
-    - 1 seul canal disponible → toute la séquence dessus (comme avant).
-    - Plusieurs canaux → étapes 1-2 sur le canal principal, puis rotation sur les
-      canaux secondaires : changer de canal relance l'attention du prospect.
-      Ex. email+mobile+linkedin : email, email, whatsapp, linkedin.
-      Ex. email+mobile : email, email, whatsapp, email.
-    Retourne [] si aucun moyen de contact.
+    Le canal est choisi par priorité Email > WhatsApp (mobile 06/07) > LinkedIn >
+    Téléphone (fixe, en dernier recours) et reste le même sur toutes les étapes :
+    le prospect garde un fil de conversation cohérent, sans effet « harcèlement »
+    multi-canal. Retourne [] si aucun moyen de contact.
     """
     canaux = available_canaux(p)
     if not canaux:
         return []
-    if len(canaux) == 1:
-        return [canaux[0]] * n_etapes
-    plan = []
-    for i in range(n_etapes):
-        if i < 2:
-            plan.append(canaux[0])
-        else:
-            plan.append(canaux[(i - 1) % len(canaux)])
-    return plan
+    return [canaux[0]] * n_etapes
 
 
 def pick_objet(step: dict, variante: str) -> str:

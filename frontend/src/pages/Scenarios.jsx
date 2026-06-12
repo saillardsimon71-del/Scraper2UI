@@ -55,20 +55,21 @@ export default function Scenarios() {
       </p>
 
       <div
-        data-testid="multicanal-info"
+        data-testid="canal-unique-info"
         className="bg-white border border-slate-200 rounded-sm p-4 mb-6 text-xs text-slate-600 leading-relaxed"
       >
-        <div className="font-semibold text-[#111111] mb-1 text-sm">Séquence multi-canal</div>
-        Le plan de canaux est construit automatiquement selon les coordonnées disponibles, dans l'ordre{" "}
+        <div className="font-semibold text-[#111111] mb-1 text-sm">Canal unique par séquence</div>
+        Le canal est choisi automatiquement selon les coordonnées disponibles, par priorité :{" "}
         <span className="inline-flex items-center gap-1 font-semibold"><EnvelopeSimple size={13} className="text-slate-700" /> Email</span>
-        {" → "}
-        <span className="inline-flex items-center gap-1 font-semibold"><WhatsappLogo size={13} className="text-[#25D366]" /> WhatsApp</span> (mobile 06/07)
-        {" → "}
-        <span className="inline-flex items-center gap-1 font-semibold"><LinkedinLogo size={13} className="text-[#0A66C2]" /> LinkedIn</span>.
-        Les étapes 1-2 restent sur le canal principal, puis la séquence change de canal pour relancer l'attention
-        (ex. email, email, WhatsApp, LinkedIn). Un seul contact disponible = toute la séquence dessus,{" "}
-        <span className="inline-flex items-center gap-1 font-semibold"><Phone size={13} className="text-slate-700" /> Téléphone</span> en dernier recours.
-        Les objets A/B ci-dessous ne servent qu'aux étapes envoyées par email : chaque prospect reçoit la variante A ou B (50/50),
+        {" › "}
+        <span className="inline-flex items-center gap-1 font-semibold"><WhatsappLogo size={13} className="text-[#25D366]" /> WhatsApp</span> (mobile 06/07 uniquement)
+        {" › "}
+        <span className="inline-flex items-center gap-1 font-semibold"><LinkedinLogo size={13} className="text-[#0A66C2]" /> LinkedIn</span>
+        {" › "}
+        <span className="inline-flex items-center gap-1 font-semibold"><Phone size={13} className="text-slate-700" /> Téléphone</span> (appel sur fixe).
+        Toute la séquence (étape 1 → dernière relance) reste sur ce même canal — le prospect garde un fil de conversation cohérent.
+        Sans aucun de ces contacts, le prospect n'est pas ajouté.
+        Les objets A/B ci-dessous ne servent qu'aux prospects contactés par email : chaque prospect reçoit la variante A ou B (50/50),
         et les résultats sont comparés dans l'onglet Business.
       </div>
 

@@ -8,9 +8,9 @@ React (CRA) + Shadcn UI · FastAPI · MongoDB · SendGrid (envoi + inbound parse
 Fichiers clés : `backend/server.py` (API), `backend/scraper_core.py` (sources/enrichissement/audit), `backend/prospection.py` (canaux, scénarios, rendu), `backend/autopilot.py` (envoi auto), `backend/webhook.py`.
 
 ## Règles métier centrales
-- **Plan multi-canal par prospect** (depuis it. 8) : canaux disponibles ordonnés **Email → WhatsApp (mobile 06/07) → LinkedIn** (téléphone fixe en dernier recours s'il est seul). Étapes 1-2 sur le canal principal, puis rotation sur les canaux secondaires (ex. email, email, whatsapp, linkedin). Un seul contact = toute la séquence dessus. Aucun contact → prospect non ajouté.
-- `plan_canaux` (liste) figé dès le premier envoi ; `canal_contact` = canal de l'étape EN COURS (mis à jour par `advance_updates` à chaque envoi). Recalculé sur PATCH seulement si jamais contacté.
-- Étape courante canal **email = pilote automatique** ; étapes whatsapp/linkedin/téléphone = file du jour (un même prospect bascule entre les deux selon l'étape).
+- **Canal unique par séquence** (décision utilisateur it. 9, annule la rotation multi-canal d'it. 8) : canal choisi à la création par priorité **Email > WhatsApp (mobile 06/07) > LinkedIn > Téléphone (fixe)** — toute la séquence (4 étapes) reste dessus. Aucun contact → prospect non ajouté.
+- `plan_canaux` (liste uniforme) + `canal_contact` conservés techniquement (advance_updates les maintient) ; recalculés sur PATCH seulement si jamais contacté.
+- Prospects canal **email = 100 % pilote automatique** ; whatsapp/linkedin/téléphone = file du jour.
 - **File du jour triée par score_vendabilite desc** (puis score_conversion, created_at).
 - **A/B testing objets email** : chaque étape a `objet` (A) + `objet_b` (B) ; `variante_ab` assignée 50/50 à la création du prospect ; envois historisés avec `variante` + `objet_template` pour les stats.
 - Statut "À contacter" pendant toute la séquence ; passe à répondu/opt-out/épuisé selon événements.
@@ -37,6 +37,7 @@ Fichiers clés : `backend/server.py` (API), `backend/scraper_core.py` (sources/e
   - **Séquences multi-canal** : `canal_plan()` / `available_canaux()` dans prospection.py, `plan_canaux` par prospect, bascule de canal dans `advance_updates`, aperçu séquence par étape (canal + objet rendu) dans la fiche, migration idempotente `migrate_multicanal()` (135 prospects migrés).
   - **Injection vendabilité** : `{argument_vente}` dans les templates site_ancien/site_moyen.
   - Templates v3 sans « c'est Simon » / « Simon ici » / « à nouveau » (demande utilisateur explicite) ; tests régression `backend/tests/test_machine_guerre.py` + `test_iteration5_api.py`.
+- It. 9 (12/06/2026) : **retour au canal unique** à la demande de l'utilisateur (« quand une séquence démarre, elle fait tout sur le même canal »). `canal_plan()` retourne désormais [canal_prioritaire] × n_etapes ; migration idempotente réaligne les plans à rotation résiduels ; le reste d'it. 8 (vendabilité, A/B, stats) est conservé.
 
 ## Backlog priorisé
 - P1 : digest quotidien par email (résumé du soir : envois, réponses, intéressés, file de demain)

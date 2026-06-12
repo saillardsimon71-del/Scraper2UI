@@ -350,7 +350,7 @@ export default function ProspectSheet({ prospectId, onClose, onChanged }) {
                   </div>
                   {p.plan_canaux?.length > 0 && (
                     <div data-testid="plan-canaux" className="text-xs text-slate-500 font-mono mb-2">
-                      Plan multi-canal : {p.plan_canaux.join(" → ")}
+                      Canal de toute la séquence : {[...new Set(p.plan_canaux)].join(" → ")}
                     </div>
                   )}
                   <div className="space-y-2">
